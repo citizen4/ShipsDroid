@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             android:padding="3dp"
+             android:layout_width="400px"
+             android:layout_height="400px"
+             android:background="#555"
+        >
+
+    <TableRow>
+        <Space/>
+        <TextView style="@style/alpha_scale_text" android:text="A"/>
+        <TextView style="@style/alpha_scale_text" android:text="B"/>
+        <TextView style="@style/alpha_scale_text" android:text="C"/>
+        <TextView style="@style/alpha_scale_text" android:text="D"/>
+        <TextView style="@style/alpha_scale_text" android:text="E"/>
+        <TextView style="@style/alpha_scale_text" android:text="F"/>
+        <TextView style="@style/alpha_scale_text" android:text="G"/>
+        <TextView style="@style/alpha_scale_text" android:text="H"/>
+        <TextView style="@style/alpha_scale_text" android:text="I"/>
+        <TextView style="@style/alpha_scale_text" android:text="J"/>
+        <Space/>
+    </TableRow>
+
+    <TableRow android:layout_width="wrap_content" android:layout_height="0dp" android:layout_weight="1">
+        <TextView style="@style/number_scale_text" android:text="10"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <TextView style="@style/number_scale_text" android:text="10"/>
+    </TableRow>
+    <TableRow android:layout_height="0dp" android:layout_weight="1">
+        <TextView style="@style/number_scale_text" android:text="9"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <TextView style="@style/number_scale_text" android:text="9"/>
+    </TableRow>
+    <TableRow android:layout_height="0dp" android:layout_weight="1">
+        <TextView style="@style/number_scale_text" android:text="8"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <TextView style="@style/number_scale_text" android:text="8"/>
+    </TableRow>
+    <TableRow android:layout_height="0dp" android:layout_weight="1">
+        <TextView style="@style/number_scale_text" android:text="7"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <TextView style="@style/number_scale_text" android:text="7"/>
+    </TableRow>
+    <TableRow android:layout_height="0dp" android:layout_weight="1">
+        <TextView style="@style/number_scale_text" android:text="6"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <TextView style="@style/number_scale_text" android:text="6"/>
+    </TableRow>
+    <TableRow android:layout_height="0dp" android:layout_weight="1">
+        <TextView style="@style/number_scale_text" android:text="5"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <TextView style="@style/number_scale_text" android:text="5"/>
+    </TableRow>
+    <TableRow android:layout_height="0dp" android:layout_weight="1">
+        <TextView style="@style/number_scale_text" android:text="4"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <TextView style="@style/number_scale_text" android:text="4"/>
+    </TableRow>
+    <TableRow android:layout_height="0dp" android:layout_weight="1">
+        <TextView style="@style/number_scale_text" android:text="3"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <TextView style="@style/number_scale_text" android:text="3"/>
+    </TableRow>
+    <TableRow android:layout_height="0dp" android:layout_weight="1">
+        <TextView style="@style/number_scale_text" android:text="2"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <TextView style="@style/number_scale_text" android:text="2"/>
+    </TableRow>
+    <TableRow android:layout_height="0dp" android:layout_weight="1">
+        <TextView style="@style/number_scale_text" android:text="1"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <Button style="@style/grid_button"/>
+        <TextView style="@style/number_scale_text" android:text="1"/>
+    </TableRow>
+    <TableRow>
+        <Space/>
+        <TextView style="@style/alpha_scale_text" android:text="A"/>
+        <TextView style="@style/alpha_scale_text" android:text="B"/>
+        <TextView style="@style/alpha_scale_text" android:text="C"/>
+        <TextView style="@style/alpha_scale_text" android:text="D"/>
+        <TextView style="@style/alpha_scale_text" android:text="E"/>
+        <TextView style="@style/alpha_scale_text" android:text="F"/>
+        <TextView style="@style/alpha_scale_text" android:text="G"/>
+        <TextView style="@style/alpha_scale_text" android:text="H"/>
+        <TextView style="@style/alpha_scale_text" android:text="I"/>
+        <TextView style="@style/alpha_scale_text" android:text="J"/>
+        <Space/>
+    </TableRow>
+
+
+</TableLayout>

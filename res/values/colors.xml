@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <item name="water" type="color">#ff8080ff</item>
+    <item name="water_border" type="color">#ff4444ff</item>
+    <item name="water_miss" type="color">#ff6060ff</item>
+    <item name="hit" type="color">#ffff1010</item>
+    <item name="hit_border" type="color">#ffee0000</item>
+    <item name="empty" type="color">#ff999999</item>
+    <item name="destroyed" type="color">#ffcccccc</item>
+    <item name="destroyed_border" type="color">#ffcccccc</item>
+    <item name="ship" type="color">#ff000000</item>
+    <item name="ship_border" type="color">#ff000000</item>
+
+</resources>
