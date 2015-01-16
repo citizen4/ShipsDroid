@@ -3,7 +3,6 @@ package c4.subnetzero.shipsdroid.view;
 
 import android.app.Activity;
 import android.content.Context;
-import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Looper;
 import android.util.DisplayMetrics;
@@ -25,7 +24,6 @@ public abstract class AbstractFleetView implements AbstractFleetModel.ModelUpdat
 {
    private static final String LOG_TAG = "AbstractFleetView";
 
-   private boolean hideInactiveGrid = false;
    private boolean isEnemy = false;
    private volatile boolean isEnabled = true;
    private GridButtonHandler mGridButtonHandler = null;
@@ -145,7 +143,8 @@ public abstract class AbstractFleetView implements AbstractFleetModel.ModelUpdat
    private void setEnabledOnUi(final boolean enable)
    {
       Log.d(LOG_TAG, "setEnabledOnUi():" + enable);
-      mBoardView.setBackgroundColor(!enable ? Color.GRAY : Color.GREEN);
+      //mBoardView.setBackgroundColor(!enable ? Color.GRAY : Color.GREEN);
+      mBoardView.setBackground(!enable ? mDrawableMap.get("DISABLED_BOARD") : mDrawableMap.get("ENABLED_BOARD"));
       mBoardView.invalidate();
    }
 
@@ -160,6 +159,8 @@ public abstract class AbstractFleetView implements AbstractFleetModel.ModelUpdat
       mDrawableMap.put("MISS", mContext.getResources().getDrawable(R.drawable.miss));
       mDrawableMap.put("HIT", mContext.getResources().getDrawable(R.drawable.hit));
       mDrawableMap.put("DESTROYED", mContext.getResources().getDrawable(R.drawable.destroyed));
+      mDrawableMap.put("DISABLED_BOARD", mContext.getResources().getDrawable(R.drawable.gray_board_bg));
+      mDrawableMap.put("ENABLED_BOARD", mContext.getResources().getDrawable(R.drawable.green_board_bg));
 
 
       gridButtons = new Button[DIM][DIM];

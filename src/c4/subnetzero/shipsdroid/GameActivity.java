@@ -231,7 +231,7 @@ public class GameActivity extends Activity implements Handler.Callback,ServiceCo
          mActionBar.setCustomView(scoreBoardView);
       }
 
-      mGridButtonHandler = new GridButtonHandler();
+      mGridButtonHandler = new GridButtonHandler(this);
       bindService(new Intent(this, NetService.class), this, BIND_AUTO_CREATE);
    }
 
@@ -252,13 +252,15 @@ public class GameActivity extends Activity implements Handler.Callback,ServiceCo
       LayoutInflater inflater = LayoutInflater.from(this);
 
       mEnemyBoard = inflater.inflate(R.layout.board, enemyFrame, false);
+      mEnemyBoard.setBackground(getResources().getDrawable(R.drawable.green_board_bg));
 
-      mEnemyFleetView = new EnemyFleetView(this, (ViewGroup) mEnemyBoard, mGridButtonHandler, minEnemyFrameSize);
+      mEnemyFleetView = new EnemyFleetView(this, (ViewGroup) mEnemyBoard, mGridButtonHandler, minEnemyFrameSize - 18);
       enemyFrame.addView(mEnemyBoard);
 
       mOwnBoard = inflater.inflate(R.layout.board, enemyFrame, false);
+      mOwnBoard.setBackground(getResources().getDrawable(R.drawable.green_board_bg));
 
-      mOwnFleetView = new OwnFleetView(this, (ViewGroup) mOwnBoard, minOwnFrameSize);
+      mOwnFleetView = new OwnFleetView(this, (ViewGroup) mOwnBoard, minOwnFrameSize - 5);
       ownFrame.addView(mOwnBoard);
 
       if (mGameEngine != null) {

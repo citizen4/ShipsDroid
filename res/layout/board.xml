@@ -3,7 +3,7 @@
              android:padding="3dp"
              android:layout_width="400px"
              android:layout_height="400px"
-             android:background="#555"
+             android:background="@drawable/gray_board_bg"
         >
 
     <TableRow>

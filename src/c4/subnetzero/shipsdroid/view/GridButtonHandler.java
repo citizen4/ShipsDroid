@@ -1,6 +1,10 @@
 package c4.subnetzero.shipsdroid.view;
 
+import android.content.Context;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import c4.subnetzero.shipsdroid.R;
 import c4.subnetzero.shipsdroid.controller.GameEngine;
 import c4.subnetzero.shipsdroid.model.SeaArea;
 
@@ -9,7 +13,13 @@ public class GridButtonHandler implements View.OnClickListener
 {
    private static final String LOG_TAG = "GridButtonHandler";
    private GameEngine mGameEngine;
+   private Animation mBtnAnim;
    private boolean isEnabled = true;
+
+   public GridButtonHandler(final Context context)
+   {
+      mBtnAnim = AnimationUtils.loadAnimation(context, R.anim.wobble);
+   }
 
    @Override
    public void onClick(View view)
@@ -17,6 +27,8 @@ public class GridButtonHandler implements View.OnClickListener
       if (!isEnabled) {
          return;
       }
+
+      view.startAnimation(mBtnAnim);
 
       int buttonIndex = view.getId();
 
