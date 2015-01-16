@@ -12,14 +12,14 @@
 
         <TextView android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
-                  android:textSize="18sp"
-                  android:text="Enemy Ships: "
+                  android:textSize="16sp"
+                  android:text="@string/enemy_ships"
                   />
 
         <TextView android:id="@+id/enemy_ships"
                   android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
-                  android:textSize="18sp"
+                  android:textSize="16sp"
                   android:textColor="#f00"
                   android:text=""
                   />
@@ -33,14 +33,14 @@
 
         <TextView android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
-                  android:textSize="18sp"
-                  android:text="My Ships: "
+                  android:textSize="16sp"
+                  android:text="@string/my_ships"
                   />
 
         <TextView android:id="@+id/my_ships"
                   android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
-                  android:textSize="18sp"
+                  android:textSize="16sp"
                   android:textColor="#0f0"
                   android:text=""
                   />

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ShipsDroid</string>
+    <string name="short_start_msg">Starte App...</string>
+    <string name="searching_peers_msg">Suche nach Peer...</string>
+    <string name="connect_ready_msg">Bereit zum Verbinden!</string>
+    <string name="wifi_connected">Wifi P2P verbunden. Bin nicht GO!</string>
+    <string name="wifi_connected_go">Wifi P2P verbunden. Bin GO!</string>
+    <string name="connect_btn">Verbinden</string>
+    <string name="connecting_msg">Verbindung wird aufgebaut...</string>
+    <string name="disconnect_btn">Trennen</string>
+    <string name="connected_ready_msg">Peer verbunden und bereit!</string>
+    <string name="wifi_disabled_msg">Wifi abgeschaltet!</string>
+    <string name="enemy_ships">Feind Schiffe:</string>
+    <string name="my_ships">Meine Schiffe:</string>
+    <string name="game_aborted_msg">Spiel wurde abgebrochen!</string>
+    <string name="game_win_msg">Du hast gewonnen!</string>
+    <string name="game_lose_msg">Du hast leider verloren!</string>
+    <string name="no_game_running_msg">Kein Spiel abzubrechen!</string>
+    <string name="no_player_connected_msg">Es ist kein Spieler verbunden!</string>
+    <string name="connection_attempt_msg">Verbindungsaufbau läuft!</string>
+    <string name="connection_attempt_aborted_msg">Verbindungsaufbau wurde abgebrochen!</string>
+    <string name="disconnect_player_first_msg">Erst Verbindung zum Spieler trennen!</string>
+    <string name="player_already_connected_msg">Schon mit Spieler verbunden</string>
+    <string name="abort_game_first_msg">Erst laufendes Spiel abbrechen!</string>
+    <string name="new_game_menu_item">Neues Spiel</string>
+    <string name="abort_game_menu_item">Spiel abbrechen</string>
+    <string name="quit_game_app_menu_item">Beenden</string>
+</resources>

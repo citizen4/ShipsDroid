@@ -25,6 +25,10 @@ public class Utils
       throw new IllegalStateException();
    }
 
+   public static void showOkMsg(final Context context, final int resourceId)
+   {
+      Utils.showOkMsg(context, context.getString(resourceId));
+   }
 
    public static void showOkMsg(final Context context, final String okMsg)
    {

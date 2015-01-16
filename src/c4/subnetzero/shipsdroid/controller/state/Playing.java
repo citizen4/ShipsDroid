@@ -1,6 +1,7 @@
 package c4.subnetzero.shipsdroid.controller.state;
 
 
+import c4.subnetzero.shipsdroid.R;
 import c4.subnetzero.shipsdroid.Utils;
 import c4.subnetzero.shipsdroid.controller.GameEngine;
 import c4.subnetzero.shipsdroid.net.Message;
@@ -23,7 +24,7 @@ public class Playing extends GameStateAdapter
    @Override
    public void connectPeer(String peerId)
    {
-      Utils.showOkMsg(engine.getContext(), "Already connected to a Player");
+      Utils.showOkMsg(engine.getContext(), R.string.player_already_connected_msg);
    }
 
    @Override
@@ -38,7 +39,7 @@ public class Playing extends GameStateAdapter
    @Override
    public void newGame()
    {
-      Utils.showOkMsg(engine.getContext(), "Abort running game first!");
+      Utils.showOkMsg(engine.getContext(), R.string.abort_game_first_msg);
    }
 
    @Override

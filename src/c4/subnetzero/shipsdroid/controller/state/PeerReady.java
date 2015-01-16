@@ -1,6 +1,7 @@
 package c4.subnetzero.shipsdroid.controller.state;
 
 
+import c4.subnetzero.shipsdroid.R;
 import c4.subnetzero.shipsdroid.Utils;
 import c4.subnetzero.shipsdroid.controller.GameEngine;
 import c4.subnetzero.shipsdroid.net.Message;
@@ -24,7 +25,7 @@ public class PeerReady extends GameStateAdapter
    @Override
    public void connectPeer(String peerId)
    {
-      Utils.showOkMsg(engine.getContext(), "Disconnect current Player first!");
+      Utils.showOkMsg(engine.getContext(), R.string.disconnect_player_first_msg);
    }
 
    @Override
@@ -48,7 +49,7 @@ public class PeerReady extends GameStateAdapter
    @Override
    public void abortGame()
    {
-      Utils.showOkMsg(engine.getContext(), "No running game to abort!");
+      Utils.showOkMsg(engine.getContext(), R.string.no_game_running_msg);
    }
 
    @Override

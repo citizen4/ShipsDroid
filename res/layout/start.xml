@@ -16,31 +16,33 @@
                   android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
                   android:textSize="20sp"
-                  android:text="Starting App..."
+                  android:text="@string/short_start_msg"
             />
     </LinearLayout>
 
     <LinearLayout android:layout_width="match_parent"
                   android:layout_height="0dp"
                   android:layout_weight="4"
+                  android:gravity="center"
             >
-
+        <Button android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="5dp"
+                android:visibility="invisible"
+                android:textSize="30sp"
+                android:text="Connect"
+                android:id="@+id/con_discon_btn"
+                />
 
     </LinearLayout>
     <LinearLayout android:layout_width="match_parent"
                   android:layout_height="0dp"
                   android:layout_weight="1"
-                  android:gravity="bottom|center"
+                  android:gravity="center"
                   android:paddingBottom="10dp"
             >
 
-        <Button android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:visibility="invisible"
-            android:text="Connect"
-            android:id="@+id/con_discon_btn"
-            />
+
     </LinearLayout>
 </LinearLayout>
 

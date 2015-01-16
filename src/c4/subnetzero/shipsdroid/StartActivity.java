@@ -14,6 +14,9 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -54,8 +57,6 @@ public class StartActivity extends Activity implements Handler.Callback, Service
    private String mPeerId = "0.0.0.0:0";
    private TextView mStateLabel;
    private Button mConDisconBtn;
-   //private P2pNetController mNetController;
-
 
    @Override
    public void onCreate(Bundle savedInstanceState)
@@ -82,7 +83,7 @@ public class StartActivity extends Activity implements Handler.Callback, Service
       Log.d(LOG_TAG, "onPause()");
       super.onPause();
 
-      if (mWifiP2pHost != null) {
+      if (mWifiP2pHost != null && mIsWifiP2pEnabled) {
          mWifiP2pHost.stop();
       }
 
@@ -95,7 +96,7 @@ public class StartActivity extends Activity implements Handler.Callback, Service
    {
       Log.d(LOG_TAG, "onDestroy()");
 
-      if(mWifiP2pHost != null){
+      if (mWifiP2pHost != null && mIsWifiP2pEnabled) {
          mWifiP2pHost.quit();
       }
 
@@ -121,6 +122,28 @@ public class StartActivity extends Activity implements Handler.Callback, Service
    }
 
    @Override
+   public boolean onCreateOptionsMenu(Menu menu)
+   {
+      MenuInflater inflater = getMenuInflater();
+      inflater.inflate(R.menu.start, menu);
+      return true;
+   }
+
+   @Override
+   public boolean onOptionsItemSelected(MenuItem item)
+   {
+      switch (item.getItemId()) {
+         case R.id.quit_app:
+            finish();
+            break;
+      }
+
+      return true;
+   }
+
+
+
+   @Override
    public boolean handleMessage(Message msg)
    {
       switch (msg.what) {
@@ -129,39 +152,39 @@ public class StartActivity extends Activity implements Handler.Callback, Service
             break;
 
          case L2_DISCOVERY_STARTED:
-            mStateLabel.setText("Searching for Peer...");
+            mStateLabel.setText(getString(R.string.searching_peers_msg));
             mConDisconBtn.setVisibility(View.INVISIBLE);
             break;
 
          case READY_TO_CONNECT:
             mConDisconBtn.setVisibility(View.VISIBLE);
-            mConDisconBtn.setText("Connect");
-            mStateLabel.setText("Ready to connect!");
+            mConDisconBtn.setText(getString(R.string.connect_btn));
+            mStateLabel.setText(getString(R.string.connect_ready_msg));
             break;
 
          case L2_CONNECTING:
-            mStateLabel.setText("Connecting...");
+            mStateLabel.setText(getString(R.string.connecting_msg));
             mConDisconBtn.setVisibility(View.INVISIBLE);
             break;
 
          case L2_CONNECTED:
             mConDisconBtn.setVisibility(View.VISIBLE);
-            mConDisconBtn.setText("Disconnect");
+            mConDisconBtn.setText(getString(R.string.disconnect_btn));
             if (!mWifiP2pHost.isGroupOwner()) {
-               mStateLabel.setText("Wifi P2P connected. I'm not GO!");
+               mStateLabel.setText(getString(R.string.wifi_connected));
                mNetService.sendServerHello(mGroupOwnerId);
             } else {
-               mStateLabel.setText("Wifi P2P connected. I'm GO!");
+               mStateLabel.setText(getString(R.string.wifi_connected_go));
             }
             break;
 
          case L2_DISCONNECTED:
-            mConDisconBtn.setText("Connect");
+            mConDisconBtn.setText(getString(R.string.connect_btn));
             mStateLabel.setText("Disconnected!");
             break;
 
          case L3_CONNECTED:
-            mStateLabel.setText("Peer connected and ready!");
+            mStateLabel.setText(getString(R.string.connected_ready_msg));
             Intent intent = new Intent(this, GameActivity.class);
             intent.putExtra("peerId", mPeerId);
             startActivity(intent);
@@ -169,7 +192,7 @@ public class StartActivity extends Activity implements Handler.Callback, Service
             break;
 
          case WIFI_DISABLED:
-            mStateLabel.setText("Wifi disabled!");
+            mStateLabel.setText(getString(R.string.wifi_disabled_msg));
             break;
 
          case FINISH_ACTIVITY:
@@ -339,6 +362,7 @@ public class StartActivity extends Activity implements Handler.Callback, Service
          } else {
             Log.i(LOG_TAG, "Wifi P2P is disabled. State " + state);
             mIsWifiP2pEnabled = false;
+            Utils.launchWifiSettings(StartActivity.this);
          }
       }
    }

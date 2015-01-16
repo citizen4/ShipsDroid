@@ -12,11 +12,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
+import android.view.*;
 import android.widget.TextView;
 import c4.subnetzero.shipsdroid.controller.GameEngine;
 import c4.subnetzero.shipsdroid.view.EnemyFleetView;
@@ -127,13 +123,8 @@ public class GameActivity extends Activity implements Handler.Callback,ServiceCo
    @Override
    public boolean onCreateOptionsMenu(Menu menu)
    {
-      //group,item,order
-      //menu.add(0, 0, 0, "Connect");
-      //menu.add(0, 1, 1, "Disconnect");
-      menu.add(0, 2, 2, "New Game");
-      menu.add(0, 3, 3, "Abort Game");
-      menu.add(0, 4, 4, "Exit");
-
+      MenuInflater inflater = getMenuInflater();
+      inflater.inflate(R.menu.game, menu);
       return true;
    }
 
@@ -142,19 +133,13 @@ public class GameActivity extends Activity implements Handler.Callback,ServiceCo
    {
 
       switch (item.getItemId()) {
-         case 0:
-            mGameEngine.connectPeer();
-            break;
-         case 1:
-            mGameEngine.disconnectPeer();
-            break;
-         case 2:
+         case R.id.new_game:
             mGameEngine.newGame();
             break;
-         case 3:
+         case R.id.abort_game:
             mGameEngine.abortGame();
             break;
-         case 4:
+         case R.id.quit_game_app:
             finish();
             break;
       }

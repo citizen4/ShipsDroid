@@ -5,6 +5,7 @@ import android.os.Handler;
 import android.util.Log;
 import c4.subnetzero.shipsdroid.GameActivity;
 import c4.subnetzero.shipsdroid.NetService;
+import c4.subnetzero.shipsdroid.R;
 import c4.subnetzero.shipsdroid.Utils;
 import c4.subnetzero.shipsdroid.controller.state.Disconnected;
 import c4.subnetzero.shipsdroid.controller.state.IGameState;
@@ -205,7 +206,7 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
                   setState(new PeerReady(this));
 
                   if (!gotAWinner) {
-                     Utils.showOkMsg(mContext, "Game aborted by peer!");
+                     Utils.showOkMsg(mContext, R.string.game_aborted_msg);
                   }
                   return;
                }
@@ -240,7 +241,7 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
                         }*/
                         //FIXME: should be currentState.finishGame();
                         currentState.abortGame();
-                        Utils.showOkMsg(mContext, "You are the Winner!");
+                        Utils.showOkMsg(mContext, R.string.game_win_msg);
                         return;
                      }
 
@@ -265,7 +266,7 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
                         if (scoreListener != null) {
                            scoreListener.onScoreUpdate(0, enemyFleetModel.getShipsLeft());
                         }*/
-                        Utils.showOkMsg(mContext, "You lose!");
+                        Utils.showOkMsg(mContext, R.string.game_lose_msg);
                         return;
                      }
 
@@ -334,12 +335,6 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
       ((EnemyFleetView) enemyFleetModelUpdateListener).setEnabled(enable);
    }
 
-   /*
-   @Override
-   public void onError(String errMsg)
-   {
-      //TODO: Inform the user
-   }*/
 
    @Override
    public void onTimeIsUp()
