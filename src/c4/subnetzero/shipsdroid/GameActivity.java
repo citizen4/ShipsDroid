@@ -34,6 +34,7 @@ public class GameActivity extends Activity implements Handler.Callback,ServiceCo
    private Handler mUiHandler;
    private View mEnemyBoard;
    private View mOwnBoard;
+   private Menu mMenu;
    private EnemyFleetView mEnemyFleetView;
    private OwnFleetView mOwnFleetView;
    private GameEngine mGameEngine;
@@ -46,6 +47,7 @@ public class GameActivity extends Activity implements Handler.Callback,ServiceCo
 
    public static final int UPDATE_SHOT_CLOCK  = 1;
    public static final int UPDATE_SCORE_BOARD = 2;
+   public static final int UPDATE_GAME_MENU = 3;
 
 
    @Override
@@ -137,6 +139,7 @@ public class GameActivity extends Activity implements Handler.Callback,ServiceCo
    {
       MenuInflater inflater = getMenuInflater();
       inflater.inflate(R.menu.game, menu);
+      mMenu = menu;
       return true;
    }
 
@@ -175,6 +178,30 @@ public class GameActivity extends Activity implements Handler.Callback,ServiceCo
          case UPDATE_SCORE_BOARD:
             mMyShipsView.setText(String.valueOf(msg.arg1));
             mEnemyShipsView.setText(String.valueOf(msg.arg2));
+            break;
+         case UPDATE_GAME_MENU:
+            switch (mGameEngine.getStateName()) {
+               case "PeerReady":
+                  mMenu.findItem(R.id.new_game).setVisible(true);
+                  mMenu.findItem(R.id.pause_game).setVisible(false);
+                  mMenu.findItem(R.id.resume_game).setVisible(false);
+                  mMenu.findItem(R.id.abort_game).setVisible(false);
+                  break;
+               case "Playing":
+                  mMenu.findItem(R.id.new_game).setVisible(false);
+                  mMenu.findItem(R.id.pause_game).setVisible(true);
+                  mMenu.findItem(R.id.resume_game).setVisible(false);
+                  mMenu.findItem(R.id.abort_game).setVisible(true);
+                  break;
+               case "Paused":
+                  mMenu.findItem(R.id.new_game).setVisible(false);
+                  mMenu.findItem(R.id.pause_game).setVisible(false);
+                  mMenu.findItem(R.id.resume_game).setVisible(true);
+                  mMenu.findItem(R.id.abort_game).setVisible(true);
+                  break;
+               default:
+                  break;
+            }
             break;
          default:
             // Get me a beer!!

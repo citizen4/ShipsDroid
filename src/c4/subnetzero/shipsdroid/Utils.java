@@ -54,6 +54,7 @@ public class Utils
             });
             dialog.setTitle("ShipsDroid");
             dialog.setMessage(okMsg);
+            dialog.setCancelable(false);
             dialog.show();
          }
       });

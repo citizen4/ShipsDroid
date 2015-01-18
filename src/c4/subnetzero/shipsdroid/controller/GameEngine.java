@@ -165,6 +165,7 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
                      mShotClock.resume();
                   }
                   setState(new Playing(this));
+                  mUiHandler.sendEmptyMessage(GameActivity.UPDATE_GAME_MENU);
                   return;
                }
 
@@ -172,6 +173,7 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
                   setPlayerEnabled(true, false);
                   mShotClock.stop();
                   setState(new PeerReady(this));
+                  mUiHandler.sendEmptyMessage(GameActivity.UPDATE_GAME_MENU);
                   Utils.showOkMsg(mContext, R.string.game_aborted_msg, null);
                   return;
                }
@@ -190,6 +192,7 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
                      mNetService.sendMessage(msg);
                   }
                   setState(new Playing(this));
+                  mUiHandler.sendEmptyMessage(GameActivity.UPDATE_GAME_MENU);
                   startNewGame();
                   return;
                }
@@ -204,6 +207,7 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
                   }
                   mShotClock.pause();
                   setState(new Paused(this));
+                  mUiHandler.sendEmptyMessage(GameActivity.UPDATE_GAME_MENU);
                   return;
                }
 
@@ -211,6 +215,7 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
                   setPlayerEnabled(true, false);
                   mShotClock.stop();
                   setState(new PeerReady(this));
+                  mUiHandler.sendEmptyMessage(GameActivity.UPDATE_GAME_MENU);
                   //setState(new Finished(this));
                   Utils.showOkMsg(mContext, R.string.game_lose_msg, null);
                   return;
@@ -220,6 +225,7 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
                   setPlayerEnabled(true, false);
                   mShotClock.stop();
                   setState(new PeerReady(this));
+                  mUiHandler.sendEmptyMessage(GameActivity.UPDATE_GAME_MENU);
                   Utils.showOkMsg(mContext, R.string.game_aborted_msg, null);
                   return;
                }
@@ -248,6 +254,7 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
                      if (enemyFleetModel.isFleetDestroyed()) {
                         setScore(ownFleetModel.getShipsLeft(), 0);
                         currentState.finishGame();
+                        mUiHandler.sendEmptyMessage(GameActivity.UPDATE_GAME_MENU);
                         Utils.showOkMsg(mContext, R.string.game_win_msg, null);
                         return;
                      }
@@ -278,11 +285,6 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
             }
             break;
 
-         case "Finished":
-
-
-            break;
-
          default:
             //TODO: Maybe send some sort of reject message
             break;
@@ -302,11 +304,6 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
       enemyFleetModel = new EnemyFleetModel(enemyFleetModelUpdateListener);
 
       setScore(AbstractFleetModel.NUMBER_OF_SHIPS, AbstractFleetModel.NUMBER_OF_SHIPS);
-      /*
-      if (scoreListener != null) {
-         scoreListener.onScoreUpdate(AbstractFleetModel.NUMBER_OF_SHIPS, AbstractFleetModel.NUMBER_OF_SHIPS);
-      }*/
-
       setPlayerEnabled(myTurnFlag, true);
    }
 

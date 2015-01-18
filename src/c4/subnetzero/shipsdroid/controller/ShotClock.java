@@ -83,7 +83,7 @@ public class ShotClock
                      if (mListener != null) {
                         mListener.onTick(timeout.intValue());
                      }
-                     if (timeout.getAndDecrement() == 0) {
+                     if (timeout.getAndDecrement() <= 0) {
                         if (mListener != null) {
                            mListener.onTimeIsUp();
                         }
