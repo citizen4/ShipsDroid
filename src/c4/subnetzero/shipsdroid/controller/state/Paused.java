@@ -6,11 +6,12 @@ import c4.subnetzero.shipsdroid.Utils;
 import c4.subnetzero.shipsdroid.controller.GameEngine;
 import c4.subnetzero.shipsdroid.net.Message;
 
-public class Playing extends GameStateAdapter
+public class Paused extends GameStateAdapter
 {
+
    private GameEngine mGameEngine = null;
 
-   public Playing(final GameEngine engine)
+   public Paused(final GameEngine engine)
    {
       mGameEngine = engine;
    }
@@ -24,19 +25,18 @@ public class Playing extends GameStateAdapter
    @Override
    public void pauseGame()
    {
-      Message abortGameMsg = new Message();
-      abortGameMsg.TYPE = Message.GAME;
-      abortGameMsg.SUB_TYPE = Message.PAUSE;
-      mGameEngine.getNetService().sendMessage(abortGameMsg);
-      //mGameEngine.getShotClock().pause();
+      Utils.showOkMsg(mGameEngine.getContext(), R.string.game_already_paused, null);
    }
 
    @Override
    public void resumeGame()
    {
-      Utils.showOkMsg(mGameEngine.getContext(), R.string.no_game_running_msg, null);
+      Message abortGameMsg = new Message();
+      abortGameMsg.TYPE = Message.GAME;
+      abortGameMsg.SUB_TYPE = Message.RESUME;
+      mGameEngine.getNetService().sendMessage(abortGameMsg);
+      //mGameEngine.setState(new PeerReady(mGameEngine));
    }
-
 
    @Override
    public void abortGame()
@@ -49,18 +49,4 @@ public class Playing extends GameStateAdapter
       mGameEngine.getShotClock().stop();
       mGameEngine.setState(new PeerReady(mGameEngine));
    }
-
-   @Override
-   public void finishGame()
-   {
-      Message abortGameMsg = new Message();
-      abortGameMsg.TYPE = Message.GAME;
-      abortGameMsg.SUB_TYPE = Message.GAME_OVER;
-      mGameEngine.getNetService().sendMessage(abortGameMsg);
-      mGameEngine.setPlayerEnabled(true, false);
-      mGameEngine.getShotClock().stop();
-      mGameEngine.setState(new PeerReady(mGameEngine));
-      //mGameEngine.setState(new Finished(mGameEngine));
-   }
-
 }

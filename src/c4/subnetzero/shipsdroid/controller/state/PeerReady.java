@@ -27,19 +27,19 @@ public class PeerReady extends GameStateAdapter
    @Override
    public void pauseGame()
    {
-      Utils.showOkMsg(mGameEngine.getContext(), R.string.no_game_running_msg);
+      Utils.showOkMsg(mGameEngine.getContext(), R.string.no_game_running_msg, null);
    }
 
    @Override
    public void resumeGame()
    {
-
+      Utils.showOkMsg(mGameEngine.getContext(), R.string.no_game_running_msg, null);
    }
 
    @Override
    public void abortGame()
    {
-      Utils.showOkMsg(mGameEngine.getContext(), R.string.no_game_running_msg);
+      Utils.showOkMsg(mGameEngine.getContext(), R.string.no_game_running_msg, null);
    }
 
 }

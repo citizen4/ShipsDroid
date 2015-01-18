@@ -8,6 +8,7 @@ import c4.subnetzero.shipsdroid.NetService;
 import c4.subnetzero.shipsdroid.R;
 import c4.subnetzero.shipsdroid.Utils;
 import c4.subnetzero.shipsdroid.controller.state.IGameState;
+import c4.subnetzero.shipsdroid.controller.state.Paused;
 import c4.subnetzero.shipsdroid.controller.state.PeerReady;
 import c4.subnetzero.shipsdroid.controller.state.Playing;
 import c4.subnetzero.shipsdroid.model.AbstractFleetModel;
@@ -36,6 +37,7 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
    private boolean gotAWinner = false;
    private IGameState currentState = new PeerReady(this);
    private Context mContext;
+   private Message mLastMessage;
 
    public GameEngine(final Context context, final NetService netService)
    {
@@ -108,6 +110,16 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
       currentState.newGame();
    }
 
+   public void pauseGame()
+   {
+      currentState.pauseGame();
+   }
+
+   public void resumeGame()
+   {
+      currentState.resumeGame();
+   }
+
    public void abortGame()
    {
       currentState.abortGame();
@@ -135,14 +147,39 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
    @Override
    public void onMessage(Message msg, final String peerId)
    {
+      if (Utils.sIsDialogOpen) {
+         Log.d(LOG_TAG, "Open Dialog: Message ignored!");
+         mLastMessage = msg;
+         return;
+      }
+
       switch (currentState.toString()) {
+         case "Paused":
+            if (msg.TYPE == Message.GAME) {
+               if (msg.SUB_TYPE == Message.RESUME) {
+                  if (!msg.ACK_FLAG) {
+                     msg.ACK_FLAG = true;
+                     mNetService.sendMessage(msg);
+                  }
+                  if (myTurnFlag) {
+                     mShotClock.resume();
+                  }
+                  setState(new Playing(this));
+                  return;
+               }
+
+               if (msg.SUB_TYPE == Message.ABORT) {
+                  setPlayerEnabled(true, false);
+                  mShotClock.stop();
+                  setState(new PeerReady(this));
+                  Utils.showOkMsg(mContext, R.string.game_aborted_msg, null);
+                  return;
+               }
+            }
+            break;
+
          case "PeerReady":
          case "Playing":
-
-            if (msg.TYPE == Message.CTRL) {
-
-
-            }
 
             if (msg.TYPE == Message.GAME) {
 
@@ -157,14 +194,33 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
                   return;
                }
 
+               if (msg.SUB_TYPE == Message.PAUSE) {
+                  if (!msg.ACK_FLAG) {
+                     msg.ACK_FLAG = true;
+                     mNetService.sendMessage(msg);
+                     Utils.showOkMsg(mContext, R.string.paused_by_peer_msg, null);
+                  } else {
+                     Utils.showOkMsg(mContext, R.string.game_paused_msg, null);
+                  }
+                  mShotClock.pause();
+                  setState(new Paused(this));
+                  return;
+               }
+
+               if (msg.SUB_TYPE == Message.GAME_OVER) {
+                  setPlayerEnabled(true, false);
+                  mShotClock.stop();
+                  setState(new PeerReady(this));
+                  //setState(new Finished(this));
+                  Utils.showOkMsg(mContext, R.string.game_lose_msg, null);
+                  return;
+               }
+
                if (msg.SUB_TYPE == Message.ABORT) {
                   setPlayerEnabled(true, false);
                   mShotClock.stop();
                   setState(new PeerReady(this));
-
-                  if (!gotAWinner) {
-                     Utils.showOkMsg(mContext, R.string.game_aborted_msg);
-                  }
+                  Utils.showOkMsg(mContext, R.string.game_aborted_msg, null);
                   return;
                }
 
@@ -190,15 +246,9 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
                      enemyFleetModel.update(i, j, resultFlag, ship);
 
                      if (enemyFleetModel.isFleetDestroyed()) {
-                        gotAWinner = true;
                         setScore(ownFleetModel.getShipsLeft(), 0);
-                        /*
-                        if (scoreListener != null) {
-                           scoreListener.onScoreUpdate(ownFleetModel.getShipsLeft(), 0);
-                        }*/
-                        //FIXME: should be currentState.finishGame();
-                        currentState.abortGame();
-                        Utils.showOkMsg(mContext, R.string.game_win_msg);
+                        currentState.finishGame();
+                        Utils.showOkMsg(mContext, R.string.game_win_msg, null);
                         return;
                      }
 
@@ -216,33 +266,23 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
                      msg.SHIP = ship;
                      mNetService.sendMessage(msg);
 
-                     if (ownFleetModel.isFleetDestroyed()) {
-                        gotAWinner = true;
-                        setScore(0, enemyFleetModel.getShipsLeft());
-                        /*
-                        if (scoreListener != null) {
-                           scoreListener.onScoreUpdate(0, enemyFleetModel.getShipsLeft());
-                        }*/
-                        Utils.showOkMsg(mContext, R.string.game_lose_msg);
-                        return;
-                     }
-
                      myTurnFlag = !(resultFlag == AbstractFleetModel.HIT || resultFlag == AbstractFleetModel.DESTROYED);
                   }
 
                   if (resultFlag == AbstractFleetModel.DESTROYED) {
                      setScore(ownFleetModel.getShipsLeft(), enemyFleetModel.getShipsLeft());
-                     /*
-                     if (scoreListener != null) {
-                        scoreListener.onScoreUpdate(ownFleetModel.getShipsLeft(), enemyFleetModel.getShipsLeft());
-                     }*/
                   }
 
                   setPlayerEnabled(myTurnFlag, false);
                }
             }
+            break;
+
+         case "Finished":
+
 
             break;
+
          default:
             //TODO: Maybe send some sort of reject message
             break;

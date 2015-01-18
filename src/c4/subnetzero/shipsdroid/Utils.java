@@ -18,6 +18,7 @@ import java.util.Enumeration;
 
 public class Utils
 {
+   public static volatile boolean sIsDialogOpen = false;
    private static final String LOG_TAG = "Utils";
 
    private Utils()
@@ -25,20 +26,32 @@ public class Utils
       throw new IllegalStateException();
    }
 
-   public static void showOkMsg(final Context context, final int resourceId)
+   public static void showOkMsg(final Context context, final int resourceId, final DialogInterface.OnClickListener action)
    {
-      Utils.showOkMsg(context, context.getString(resourceId));
+      Utils.showOkMsg(context, context.getString(resourceId), action);
    }
 
-   public static void showOkMsg(final Context context, final String okMsg)
+   public static void showOkMsg(final Context context, final String okMsg, final DialogInterface.OnClickListener action)
    {
+      if (Utils.sIsDialogOpen) {
+         return;
+      }
+
       ((Activity) context).runOnUiThread(new Runnable()
       {
          @Override
          public void run()
          {
+            Utils.sIsDialogOpen = true;
             AlertDialog dialog = new AlertDialog.Builder(context).create();
-            dialog.setButton(DialogInterface.BUTTON_NEUTRAL, "Ok", (DialogInterface.OnClickListener) null);
+            dialog.setButton(DialogInterface.BUTTON_NEUTRAL, "Ok", new DialogInterface.OnClickListener()
+            {
+               @Override
+               public void onClick(DialogInterface dialog, int which)
+               {
+                  Utils.sIsDialogOpen = false;
+               }
+            });
             dialog.setTitle("ShipsDroid");
             dialog.setMessage(okMsg);
             dialog.show();

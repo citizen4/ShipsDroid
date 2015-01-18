@@ -26,19 +26,9 @@ public abstract class GameStateAdapter implements IGameState
    }
 
    @Override
-   public void winGame()
+   public void finishGame()
    {
    }
-
-   @Override
-   public void loseGame()
-   {
-   }
-
-   /*
-   @Override
-   public void shoot(final int i, final int j) {}
-   */
 
    @Override
    public String toString()

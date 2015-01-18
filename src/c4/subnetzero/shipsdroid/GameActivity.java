@@ -89,8 +89,11 @@ public class GameActivity extends Activity implements Handler.Callback,ServiceCo
    {
       Log.d(LOG_TAG, "onPause()");
       super.onPause();
-   }
 
+      if (mGameEngine != null && mGameEngine.getStateName().equals("Playing")) {
+         mGameEngine.pauseGame();
+      }
+   }
 
    @Override
    protected void onDestroy()
@@ -145,6 +148,12 @@ public class GameActivity extends Activity implements Handler.Callback,ServiceCo
          case R.id.new_game:
             mGameEngine.newGame();
             break;
+         case R.id.pause_game:
+            mGameEngine.pauseGame();
+            break;
+         case R.id.resume_game:
+            mGameEngine.resumeGame();
+            break;
          case R.id.abort_game:
             mGameEngine.abortGame();
             break;
@@ -189,11 +198,12 @@ public class GameActivity extends Activity implements Handler.Callback,ServiceCo
       mGridButtonHandler.setGameEngine(mGameEngine);
    }
 
+
+   // Only gets called when service has crashed!!
    @Override
    public void onServiceDisconnected(ComponentName name)
    {
-      Log.d(LOG_TAG, "onServiceDisconnected()");
-      mNetService.stop();
+      Log.d(LOG_TAG, "onServiceDisconnected(): Service has crashed!!");
       mNetService = null;
    }
 

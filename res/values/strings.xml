@@ -26,4 +26,9 @@
     <string name="new_game_menu_item">New Game</string>
     <string name="abort_game_menu_item">Abort Game</string>
     <string name="quit_game_app_menu_item">Quit</string>
+    <string name="game_already_paused">Game is already paused!</string>
+    <string name="paused_by_peer_msg">Game paused by Peer</string>
+    <string name="game_paused_msg">Game paused</string>
+    <string name="pause_game_menu_item">Pause Game</string>
+    <string name="resume_game_menu_item">Resume Game</string>
 </resources>
