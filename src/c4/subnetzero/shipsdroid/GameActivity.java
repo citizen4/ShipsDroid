@@ -11,8 +11,14 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.*;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.TextView;
 import c4.subnetzero.shipsdroid.controller.GameEngine;
 import c4.subnetzero.shipsdroid.view.EnemyFleetView;
@@ -90,6 +96,9 @@ public class GameActivity extends Activity implements Handler.Callback,ServiceCo
    protected void onDestroy()
    {
       Log.d(LOG_TAG, "onDestroy()");
+      if (mGameEngine != null) {
+         mGameEngine.shutDown();
+      }
       unbindService(this);
       super.onDestroy();
    }
@@ -222,30 +231,27 @@ public class GameActivity extends Activity implements Handler.Callback,ServiceCo
 
    private void buildGameBoard()
    {
+      DisplayMetrics metrics = getResources().getDisplayMetrics();
       ViewGroup enemyFrame = (ViewGroup) findViewById(R.id.enemy_fleet_frame);
       ViewGroup ownFrame = (ViewGroup) findViewById(R.id.own_fleet_frame);
 
       int minEnemyFrameSize = enemyFrame.getMeasuredWidth() > enemyFrame.getMeasuredHeight() ?
               enemyFrame.getMeasuredHeight() : enemyFrame.getMeasuredWidth();
 
-      int minOwnFrameSize = ownFrame.getWidth() > ownFrame.getHeight() ?
-              ownFrame.getHeight() : ownFrame.getWidth();
+      int minOwnFrameSize = ownFrame.getMeasuredWidth() > ownFrame.getMeasuredHeight() ?
+              ownFrame.getMeasuredHeight() : ownFrame.getMeasuredWidth();
 
-      minEnemyFrameSize = 10 * (int) (minEnemyFrameSize / 10.0f);
-      minOwnFrameSize = 10 * (int) (minOwnFrameSize / 10.0f);
+      minEnemyFrameSize = 12 * (int) (minEnemyFrameSize / 12.0f);
+      minOwnFrameSize = 12 * (int) (minOwnFrameSize / 12.0f);
 
       LayoutInflater inflater = LayoutInflater.from(this);
 
       mEnemyBoard = inflater.inflate(R.layout.board, enemyFrame, false);
-      mEnemyBoard.setBackground(getResources().getDrawable(R.drawable.green_board_bg));
-
-      mEnemyFleetView = new EnemyFleetView(this, (ViewGroup) mEnemyBoard, mGridButtonHandler, minEnemyFrameSize - 18);
+      mEnemyFleetView = new EnemyFleetView(this, (ViewGroup) mEnemyBoard, mGridButtonHandler, minEnemyFrameSize - 12);
       enemyFrame.addView(mEnemyBoard);
 
       mOwnBoard = inflater.inflate(R.layout.board, enemyFrame, false);
-      mOwnBoard.setBackground(getResources().getDrawable(R.drawable.green_board_bg));
-
-      mOwnFleetView = new OwnFleetView(this, (ViewGroup) mOwnBoard, minOwnFrameSize - 5);
+      mOwnFleetView = new OwnFleetView(this, (ViewGroup) mOwnBoard, minOwnFrameSize - (int) (30 * metrics.density));
       ownFrame.addView(mOwnBoard);
 
       if (mGameEngine != null) {

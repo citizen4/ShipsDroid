@@ -6,10 +6,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ShotClock
 {
    private static final String LOG_TAG = "ShotClock";
-   private static final int TIMEOUT = 9;
+   private static final int TIMEOUT = 10;
    private Thread shotClockThread = null;
    private volatile AtomicInteger timeout = new AtomicInteger(TIMEOUT);
    private volatile AtomicBoolean isStopped = new AtomicBoolean(false);
+   private volatile boolean mQuitFlag;
    private final Object waitLock = new Object();
    private Listener mListener = null;
 
@@ -31,30 +32,37 @@ public class ShotClock
       }
    }
 
-   public void stop()
-   {
-      if (mListener != null) {
-         mListener.onTick(TIMEOUT + 1);
-      }
-      isStopped.set(true);
-   }
-
-   public void reset()
+   public void start()
    {
       timeout.set(TIMEOUT);
       isStopped.set(false);
 
-      if (mListener != null) {
-         mListener.onTick(TIMEOUT + 1);
+      synchronized (waitLock) {
+         waitLock.notify();
       }
 
       if (shotClockThread == null) {
          startThread();
       }
+   }
 
-      synchronized (waitLock) {
-         waitLock.notify();
+   public void stop()
+   {
+      isStopped.set(true);
+
+      if (mListener != null) {
+         mListener.onTick(0);
       }
+   }
+
+   public void pause()
+   {
+      isStopped.set(true);
+   }
+
+   public void resume()
+   {
+      isStopped.set(false);
    }
 
    private void startThread()
@@ -67,28 +75,20 @@ public class ShotClock
             timeout.set(TIMEOUT);
 
             while (!Thread.currentThread().isInterrupted()) {
-
                try {
-                  Thread.sleep(1000);
-
-                  if (isStopped.get()) {
-                     continue;
+                  synchronized (waitLock) {
+                     waitLock.wait(1000);
                   }
-
-                  if (mListener != null) {
-                     mListener.onTick(timeout.intValue());
-                  }
-
-                  if (timeout.getAndDecrement() == 0) {
-
+                  if (!isStopped.get()) {
                      if (mListener != null) {
-                        mListener.onTimeIsUp();
+                        mListener.onTick(timeout.intValue());
                      }
-                     synchronized (waitLock) {
-                        waitLock.wait();
+                     if (timeout.getAndDecrement() == 0) {
+                        if (mListener != null) {
+                           mListener.onTimeIsUp();
+                        }
                      }
                   }
-
                } catch (InterruptedException e) {
                   Thread.currentThread().interrupt();
                }
@@ -103,6 +103,7 @@ public class ShotClock
    public interface Listener
    {
       public void onTick(final int tick);
+
       public void onTimeIsUp();
    }
 }

@@ -9,11 +9,11 @@
                     android:type="linear"
                     android:angle="90"/>
 
-            <padding android:left="1dp"
-                     android:top="1dp"
-                     android:right="1dp"
-                     android:bottom="1dp"/>
-            <corners android:radius="16dp"/>
+            <padding android:left="1px"
+                     android:top="1px"
+                     android:right="1px"
+                     android:bottom="1px"/>
+            <corners android:radius="16px"/>
         </shape>
     </item>
 
@@ -26,11 +26,11 @@
                     android:centerX="0.5"
                     android:angle="90"/>
 
-            <padding android:left="0dp"
-                     android:top="0dp"
-                     android:right="0dp"
-                     android:bottom="0dp"/>
-            <corners android:radius="16dp"/>
+            <padding android:left="0px"
+                     android:top="0px"
+                     android:right="0px"
+                     android:bottom="0px"/>
+            <corners android:radius="16px"/>
         </shape>
     </item>
 
@@ -43,11 +43,11 @@
                     android:centerX="0.7"
                     android:angle="90"/>
 
-            <padding android:left="4dp"
-                     android:top="0dp"
-                     android:right="4dp"
-                     android:bottom="0dp"/>
-            <corners android:radius="16dp"/>
+            <padding android:left="4px"
+                     android:top="0px"
+                     android:right="4px"
+                     android:bottom="0px"/>
+            <corners android:radius="16px"/>
         </shape>
     </item>
 

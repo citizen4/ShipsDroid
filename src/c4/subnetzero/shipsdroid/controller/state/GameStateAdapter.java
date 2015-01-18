@@ -2,23 +2,21 @@ package c4.subnetzero.shipsdroid.controller.state;
 
 public abstract class GameStateAdapter implements IGameState
 {
-   @Override
-   public void startNetReceiver()
-   {
-   }
-
-   @Override
-   public void connectPeer(String peerId)
-   {
-   }
-
-   @Override
-   public void disconnectPeer()
-   {
-   }
+   private static final String LOG_TAG = "GameStateAdapter";
+   private static final boolean LOG_STATE_TRANSITION = false;
 
    @Override
    public void newGame()
+   {
+   }
+
+   @Override
+   public void pauseGame()
+   {
+   }
+
+   @Override
+   public void resumeGame()
    {
    }
 
@@ -28,12 +26,33 @@ public abstract class GameStateAdapter implements IGameState
    }
 
    @Override
-   public void stopNetReceiver()
+   public void winGame()
    {
    }
 
    @Override
-   public void shoot(final int i, final int j)
+   public void loseGame()
    {
+   }
+
+   /*
+   @Override
+   public void shoot(final int i, final int j) {}
+   */
+
+   @Override
+   public String toString()
+   {
+      return this.getClass().getSimpleName();
+   }
+
+   @Override
+   public boolean equals(Object o)
+   {
+      if (o instanceof IGameState) {
+         return this.toString().equals(o.toString());
+      }
+
+      return false;
    }
 }

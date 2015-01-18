@@ -7,7 +7,6 @@ import c4.subnetzero.shipsdroid.GameActivity;
 import c4.subnetzero.shipsdroid.NetService;
 import c4.subnetzero.shipsdroid.R;
 import c4.subnetzero.shipsdroid.Utils;
-import c4.subnetzero.shipsdroid.controller.state.Disconnected;
 import c4.subnetzero.shipsdroid.controller.state.IGameState;
 import c4.subnetzero.shipsdroid.controller.state.PeerReady;
 import c4.subnetzero.shipsdroid.controller.state.Playing;
@@ -35,7 +34,6 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
    private ScoreListener scoreListener = null;
    private volatile boolean myTurnFlag = false;
    private boolean gotAWinner = false;
-   //private IGameState currentState = new Started(this);
    private IGameState currentState = new PeerReady(this);
    private Context mContext;
 
@@ -45,9 +43,9 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
       mNetService = netService;
       mNetService.setListener(this);
 
-      if(mContext instanceof GameActivity){
-         mUiHandler = ((GameActivity)mContext).getUiHandler();
-      }else {
+      if (mContext instanceof GameActivity) {
+         mUiHandler = ((GameActivity) mContext).getUiHandler();
+      } else {
          throw new IllegalStateException("Called from wrong activity");
       }
 
@@ -87,10 +85,10 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
 
    public String getStateName()
    {
-      return currentState.getClass().getSimpleName();
+      return currentState.toString();
    }
 
-   public IGameState getState()
+   public IGameState getCurrentStateInstance()
    {
       return currentState;
    }
@@ -105,26 +103,6 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
       return mContext;
    }
 
-   public void startNetReveiver()
-   {
-      currentState.startNetReceiver();
-   }
-
-   public void stopNetReceiver()
-   {
-      currentState.stopNetReceiver();
-   }
-
-   public void connectPeer()
-   {
-      currentState.connectPeer(null);
-   }
-
-   public void disconnectPeer()
-   {
-      currentState.disconnectPeer();
-   }
-
    public void newGame()
    {
       currentState.newGame();
@@ -137,54 +115,33 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
 
    public void shoot(final int i, final int j)
    {
-      currentState.shoot(i, j);
+      if (currentState.toString().equals("Playing")) {
+         mShotClock.pause();
+         Message bombMsg = new Message();
+         bombMsg.TYPE = Message.GAME;
+         bombMsg.SUB_TYPE = Message.SHOOT;
+         bombMsg.PAYLOAD = new Object[]{i, j};
+         mNetService.sendMessage(bombMsg);
+      }
+   }
+
+   public void shutDown()
+   {
+      mShotClock.stop();
+      mShotClock.shutdown();
    }
 
    // FIXME: This method obviously needs some refactoring ;)
    @Override
    public void onMessage(Message msg, final String peerId)
    {
-      switch (getStateName()) {
-         case "Disconnected":
-            if (msg.TYPE == Message.CTRL && msg.SUB_TYPE == Message.CONNECT) {
-               msg.ACK_FLAG = true;
-               msg.RST_FLAG = false;
-               mNetService.sendMessage(msg);
-               setState(new PeerReady(this));
-            }
-            break;
-         case "Connecting":
-            if (msg.TYPE == Message.CTRL && msg.SUB_TYPE == Message.CONNECT) {
-
-               //Dialogs.closeMsgDialog();
-
-               if (msg.ACK_FLAG && !msg.RST_FLAG) {
-                  setState(new PeerReady(this));
-               }
-
-               /*
-               if (msg.ACK_FLAG && msg.RST_FLAG) {
-                  setState(new Disconnected(this));
-                  Dialogs.showOkMsg("Connection rejected!");
-               }*/
-            }
-            break;
+      switch (currentState.toString()) {
          case "PeerReady":
          case "Playing":
 
             if (msg.TYPE == Message.CTRL) {
 
-               /*
-               if (msg.SUB_TYPE == Message.CONNECT) {
-                  msg.ACK_FLAG = true;
-                  msg.RST_FLAG = true;
-                  netController.sendMessage(msg, peerId.split(":")[0]);
-               }*/
 
-               if (msg.SUB_TYPE == Message.DISCONNECT) {
-                  setState(new Disconnected(this));
-                  return;
-               }
             }
 
             if (msg.TYPE == Message.GAME) {
@@ -201,7 +158,7 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
                }
 
                if (msg.SUB_TYPE == Message.ABORT) {
-                  setPlayerEnabled(true);
+                  setPlayerEnabled(true, false);
                   mShotClock.stop();
                   setState(new PeerReady(this));
 
@@ -213,7 +170,7 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
 
                if (msg.SUB_TYPE == Message.TIMEOUT) {
                   Log.d(LOG_TAG, "Timeout received");
-                  setPlayerEnabled(true);
+                  setPlayerEnabled(true, false);
                   return;
                }
 
@@ -281,7 +238,7 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
                      }*/
                   }
 
-                  setPlayerEnabled(myTurnFlag);
+                  setPlayerEnabled(myTurnFlag, false);
                }
             }
 
@@ -310,7 +267,7 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
          scoreListener.onScoreUpdate(AbstractFleetModel.NUMBER_OF_SHIPS, AbstractFleetModel.NUMBER_OF_SHIPS);
       }*/
 
-      setPlayerEnabled(myTurnFlag);
+      setPlayerEnabled(myTurnFlag, true);
    }
 
    private void setScore(final int myShips, final int enemyShips)
@@ -323,16 +280,14 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
    }
 
 
-   public void setPlayerEnabled(final boolean enable)
+   public void setPlayerEnabled(final boolean enable, final boolean newGame)
    {
-      Log.d(LOG_TAG, "setPlayerEnabled():" + enable);
-
       if (enable) {
-         mShotClock.reset();
+         mShotClock.start();
       } else {
          mShotClock.stop();
       }
-      ((EnemyFleetView) enemyFleetModelUpdateListener).setEnabled(enable);
+      ((EnemyFleetView) enemyFleetModelUpdateListener).setEnabled(enable, newGame);
    }
 
 
@@ -340,7 +295,7 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
    public void onTimeIsUp()
    {
       Log.d(LOG_TAG, "onTimeIsUp()");
-      setPlayerEnabled(false);
+      setPlayerEnabled(false, false);
       Message timeoutMsg = new Message();
       timeoutMsg.TYPE = Message.GAME;
       timeoutMsg.SUB_TYPE = Message.TIMEOUT;

@@ -18,7 +18,7 @@ public class GridButtonHandler implements View.OnClickListener
 
    public GridButtonHandler(final Context context)
    {
-      mBtnAnim = AnimationUtils.loadAnimation(context, R.anim.wobble);
+      mBtnAnim = AnimationUtils.loadAnimation(context, R.anim.grow);
    }
 
    @Override
@@ -28,14 +28,13 @@ public class GridButtonHandler implements View.OnClickListener
          return;
       }
 
-      view.startAnimation(mBtnAnim);
-
       int buttonIndex = view.getId();
 
       int i = buttonIndex % SeaArea.DIM;
       int j = buttonIndex / SeaArea.DIM;
 
-      if (mGameEngine != null) {
+      if (mGameEngine != null && mGameEngine.getStateName().equals("Playing")) {
+         view.startAnimation(mBtnAnim);
          mGameEngine.shoot(i, j);
       }
    }
