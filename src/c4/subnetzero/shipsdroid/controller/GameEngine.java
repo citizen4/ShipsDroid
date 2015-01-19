@@ -34,7 +34,8 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
    private StateListener stateListener = null;
    private ScoreListener scoreListener = null;
    private volatile boolean myTurnFlag = false;
-   private boolean gotAWinner = false;
+   //private boolean gotAWinner = false;
+   private boolean mIsHidden = false;
    private IGameState currentState = new PeerReady(this);
    private Context mContext;
    private Message mLastMessage;
@@ -77,6 +78,14 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
       currentState = newState;
       if (stateListener != null) {
          stateListener.onStateChange(newState);
+      }
+   }
+
+   public void setHidden(final boolean isHidden)
+   {
+      mIsHidden = isHidden;
+      if (isHidden) {
+
       }
    }
 
@@ -141,20 +150,46 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
    {
       mShotClock.stop();
       mShotClock.shutdown();
+      Message quitMsg = new Message();
+      quitMsg.TYPE = Message.CTRL;
+      quitMsg.SUB_TYPE = Message.PEER_QUIT;
+      mNetService.sendMessage(quitMsg);
    }
 
    // FIXME: This method obviously needs some refactoring ;)
    @Override
    public void onMessage(Message msg, final String peerId)
    {
-      if (Utils.sIsDialogOpen) {
+      if (msg.TYPE == Message.CTRL) {
+         if (msg.SUB_TYPE == Message.PEER_QUIT) {
+            mShotClock.stop();
+            setState(new PeerReady(this));
+            if (Utils.sIsDialogOpen) {
+               Utils.closeOkMsg(mContext);
+            }
+            Utils.showToast(mContext, R.string.peer_has_quit_msg);
+            mUiHandler.sendEmptyMessage(GameActivity.PEER_QUIT_APP);
+            return;
+         }
+         if (msg.SUB_TYPE == Message.PEER_IS_HIDDEN) {
+            Utils.showToast(mContext, R.string.peer_is_hidden_msg);
+            return;
+         }
+      }
+
+      if (Utils.sIsDialogOpen || mIsHidden) {
          Log.d(LOG_TAG, "Open Dialog: Message ignored!");
-         mLastMessage = msg;
+         Message hiddenMsg = new Message();
+         hiddenMsg.TYPE = Message.CTRL;
+         hiddenMsg.SUB_TYPE = Message.PEER_IS_HIDDEN;
+         mNetService.sendMessage(hiddenMsg);
+         //mLastMessage = msg;
          return;
       }
 
       switch (currentState.toString()) {
          case "Paused":
+
             if (msg.TYPE == Message.GAME) {
                if (msg.SUB_TYPE == Message.RESUME) {
                   if (!msg.ACK_FLAG) {
@@ -170,21 +205,25 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
                }
 
                if (msg.SUB_TYPE == Message.ABORT) {
+                  if (!msg.ACK_FLAG) {
+                     msg.ACK_FLAG = true;
+                     mNetService.sendMessage(msg);
+                     Utils.showOkMsg(mContext, R.string.aborted_by_peer_msg, null);
+                  } else {
+                     Utils.showOkMsg(mContext, R.string.game_aborted_msg, null);
+                  }
                   setPlayerEnabled(true, false);
                   mShotClock.stop();
                   setState(new PeerReady(this));
                   mUiHandler.sendEmptyMessage(GameActivity.UPDATE_GAME_MENU);
-                  Utils.showOkMsg(mContext, R.string.game_aborted_msg, null);
                   return;
                }
             }
             break;
 
          case "PeerReady":
-         case "Playing":
 
             if (msg.TYPE == Message.GAME) {
-
                if (msg.SUB_TYPE == Message.NEW) {
                   myTurnFlag = msg.ACK_FLAG;
                   if (!msg.ACK_FLAG && !msg.RST_FLAG) {
@@ -196,7 +235,12 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
                   startNewGame();
                   return;
                }
+            }
+            break;
 
+         case "Playing":
+
+            if (msg.TYPE == Message.GAME) {
                if (msg.SUB_TYPE == Message.PAUSE) {
                   if (!msg.ACK_FLAG) {
                      msg.ACK_FLAG = true;
@@ -216,17 +260,22 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
                   mShotClock.stop();
                   setState(new PeerReady(this));
                   mUiHandler.sendEmptyMessage(GameActivity.UPDATE_GAME_MENU);
-                  //setState(new Finished(this));
                   Utils.showOkMsg(mContext, R.string.game_lose_msg, null);
                   return;
                }
 
                if (msg.SUB_TYPE == Message.ABORT) {
+                  if (!msg.ACK_FLAG) {
+                     msg.ACK_FLAG = true;
+                     mNetService.sendMessage(msg);
+                     Utils.showOkMsg(mContext, R.string.aborted_by_peer_msg, null);
+                  } else {
+                     Utils.showOkMsg(mContext, R.string.game_aborted_msg, null);
+                  }
                   setPlayerEnabled(true, false);
                   mShotClock.stop();
                   setState(new PeerReady(this));
                   mUiHandler.sendEmptyMessage(GameActivity.UPDATE_GAME_MENU);
-                  Utils.showOkMsg(mContext, R.string.game_aborted_msg, null);
                   return;
                }
 
@@ -299,7 +348,7 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
 
    private void startNewGame()
    {
-      gotAWinner = false;
+      //gotAWinner = false;
       ownFleetModel = new OwnFleetModel(ownFleetModelUpdateListener);
       enemyFleetModel = new EnemyFleetModel(enemyFleetModelUpdateListener);
 

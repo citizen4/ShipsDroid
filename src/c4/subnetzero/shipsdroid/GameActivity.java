@@ -25,7 +25,7 @@ import c4.subnetzero.shipsdroid.view.EnemyFleetView;
 import c4.subnetzero.shipsdroid.view.GridButtonHandler;
 import c4.subnetzero.shipsdroid.view.OwnFleetView;
 
-public class GameActivity extends Activity implements Handler.Callback,ServiceConnection
+public class GameActivity extends Activity implements Handler.Callback, ServiceConnection
 {
 
    private static final String LOG_TAG = "GameActivity";
@@ -45,10 +45,10 @@ public class GameActivity extends Activity implements Handler.Callback,ServiceCo
    private TextView mMyShipsView;
    //private ActionBar mActionBar;
 
-   public static final int UPDATE_SHOT_CLOCK  = 1;
+   public static final int UPDATE_SHOT_CLOCK = 1;
    public static final int UPDATE_SCORE_BOARD = 2;
    public static final int UPDATE_GAME_MENU = 3;
-
+   public static final int PEER_QUIT_APP = 4;
 
    @Override
    public void onCreate(Bundle savedInstanceState)
@@ -83,6 +83,10 @@ public class GameActivity extends Activity implements Handler.Callback,ServiceCo
    {
       Log.d(LOG_TAG, "onResume()");
       super.onResume();
+
+      if (mGameEngine != null) {
+         mGameEngine.setHidden(false);
+      }
    }
 
 
@@ -92,8 +96,12 @@ public class GameActivity extends Activity implements Handler.Callback,ServiceCo
       Log.d(LOG_TAG, "onPause()");
       super.onPause();
 
-      if (mGameEngine != null && mGameEngine.getStateName().equals("Playing")) {
-         mGameEngine.pauseGame();
+      if (mGameEngine != null) {
+         if (mGameEngine.getStateName().equals("Playing")) {
+            mGameEngine.pauseGame();
+         } else {
+            mGameEngine.setHidden(true);
+         }
       }
    }
 
@@ -106,6 +114,13 @@ public class GameActivity extends Activity implements Handler.Callback,ServiceCo
       }
       unbindService(this);
       super.onDestroy();
+   }
+
+   @Override
+   public void onBackPressed()
+   {
+      quitApp();
+      finish();
    }
 
    @Override
@@ -146,7 +161,6 @@ public class GameActivity extends Activity implements Handler.Callback,ServiceCo
    @Override
    public boolean onOptionsItemSelected(MenuItem item)
    {
-
       switch (item.getItemId()) {
          case R.id.new_game:
             mGameEngine.newGame();
@@ -161,6 +175,7 @@ public class GameActivity extends Activity implements Handler.Callback,ServiceCo
             mGameEngine.abortGame();
             break;
          case R.id.quit_game_app:
+            quitApp();
             finish();
             break;
       }
@@ -171,7 +186,7 @@ public class GameActivity extends Activity implements Handler.Callback,ServiceCo
    @Override
    public boolean handleMessage(Message msg)
    {
-      switch (msg.what){
+      switch (msg.what) {
          case UPDATE_SHOT_CLOCK:
             mShotClockView.setText(String.valueOf(msg.arg1));
             break;
@@ -203,13 +218,13 @@ public class GameActivity extends Activity implements Handler.Callback,ServiceCo
                   break;
             }
             break;
+         case PEER_QUIT_APP:
+            finish();
          default:
             // Get me a beer!!
             break;
 
       }
-
-
       return true;
    }
 
@@ -242,16 +257,16 @@ public class GameActivity extends Activity implements Handler.Callback,ServiceCo
 
    private void setup()
    {
-      mShotClockView = (TextView)findViewById(R.id.shot_clock);
+      mShotClockView = (TextView) findViewById(R.id.shot_clock);
       ActionBar mActionBar = getActionBar();
 
-      if ( mActionBar != null ) {
+      if (mActionBar != null) {
          //LayoutInflater inflater = LayoutInflater.from(this);
          LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-         View scoreBoardView = (View)inflater.inflate(R.layout.score, null);
+         View scoreBoardView = (View) inflater.inflate(R.layout.score, null);
 
-         mEnemyShipsView = (TextView)scoreBoardView.findViewById(R.id.enemy_ships);
-         mMyShipsView    = (TextView)scoreBoardView.findViewById(R.id.my_ships);
+         mEnemyShipsView = (TextView) scoreBoardView.findViewById(R.id.enemy_ships);
+         mMyShipsView = (TextView) scoreBoardView.findViewById(R.id.my_ships);
 
          mActionBar.setDisplayShowHomeEnabled(true);
          mActionBar.setDisplayHomeAsUpEnabled(false);
@@ -297,4 +312,14 @@ public class GameActivity extends Activity implements Handler.Callback,ServiceCo
 
    }
 
+   private void quitApp()
+   {
+      if (mNetService != null) {
+         mNetService.setListener(null);
+      }
+
+      if (mGameEngine != null) {
+         mGameEngine.shutDown();
+      }
+   }
 }

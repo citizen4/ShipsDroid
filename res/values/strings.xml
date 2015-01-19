@@ -13,7 +13,7 @@
     <string name="wifi_disabled_msg">Wifi disabled!</string>
     <string name="enemy_ships">Enemy Ships:</string>
     <string name="my_ships">My Ships:</string>
-    <string name="game_aborted_msg">Game aborted by peer!</string>
+    <string name="game_aborted_msg">Game aborted!</string>
     <string name="game_win_msg">You are the winner!</string>
     <string name="game_lose_msg">Sorry! You lose!</string>
     <string name="no_game_running_msg">No running game to abort!</string>
@@ -31,4 +31,7 @@
     <string name="game_paused_msg">Game paused</string>
     <string name="pause_game_menu_item">Pause Game</string>
     <string name="resume_game_menu_item">Resume Game</string>
+    <string name="aborted_by_peer_msg">Game aborted by Peer!</string>
+    <string name="peer_has_quit_msg">Peer has quit. So do we!</string>
+    <string name="peer_is_hidden_msg">Peer is hidden!</string>
 </resources>

@@ -18,12 +18,32 @@ import java.util.Enumeration;
 
 public class Utils
 {
-   public static volatile boolean sIsDialogOpen = false;
    private static final String LOG_TAG = "Utils";
+   public static volatile boolean sIsDialogOpen = false;
+   private static AlertDialog sOkDialog = null;
 
    private Utils()
    {
       throw new IllegalStateException();
+   }
+
+   public static void showToast(final Context context, final int resourceId)
+   {
+      Utils.showToast(context, context.getString(resourceId));
+   }
+
+   public static void showToast(final Context context, final String toastMsg)
+   {
+      if (context != null) {
+         ((Activity) context).runOnUiThread(new Runnable()
+         {
+            @Override
+            public void run()
+            {
+               Toast.makeText(context, toastMsg, Toast.LENGTH_LONG).show();
+            }
+         });
+      }
    }
 
    public static void showOkMsg(final Context context, final int resourceId, final DialogInterface.OnClickListener action)
@@ -33,7 +53,40 @@ public class Utils
 
    public static void showOkMsg(final Context context, final String okMsg, final DialogInterface.OnClickListener action)
    {
-      if (Utils.sIsDialogOpen) {
+      if (context == null || Utils.sIsDialogOpen) {
+         return;
+      }
+
+      Utils.sIsDialogOpen = true;
+
+      ((Activity) context).runOnUiThread(new Runnable()
+      {
+         @Override
+         public void run()
+         {
+            if (sOkDialog == null) {
+               sOkDialog = new AlertDialog.Builder(context).create();
+               sOkDialog.setButton(DialogInterface.BUTTON_NEUTRAL, "Ok", new DialogInterface.OnClickListener()
+               {
+                  @Override
+                  public void onClick(DialogInterface dialog, int which)
+                  {
+                     Utils.sIsDialogOpen = false;
+                  }
+               });
+               sOkDialog.setTitle("ShipsDroid");
+               sOkDialog.setCancelable(false);
+            }
+
+            sOkDialog.setMessage(okMsg);
+            sOkDialog.show();
+         }
+      });
+   }
+
+   public static void closeOkMsg(final Context context)
+   {
+      if (context == null || !Utils.sIsDialogOpen) {
          return;
       }
 
@@ -42,20 +95,10 @@ public class Utils
          @Override
          public void run()
          {
-            Utils.sIsDialogOpen = true;
-            AlertDialog dialog = new AlertDialog.Builder(context).create();
-            dialog.setButton(DialogInterface.BUTTON_NEUTRAL, "Ok", new DialogInterface.OnClickListener()
-            {
-               @Override
-               public void onClick(DialogInterface dialog, int which)
-               {
-                  Utils.sIsDialogOpen = false;
-               }
-            });
-            dialog.setTitle("ShipsDroid");
-            dialog.setMessage(okMsg);
-            dialog.setCancelable(false);
-            dialog.show();
+            if (sOkDialog != null) {
+               sOkDialog.dismiss();
+            }
+            Utils.sIsDialogOpen = false;
          }
       });
    }
@@ -67,6 +110,7 @@ public class Utils
       dialog.setButton(DialogInterface.BUTTON_NEUTRAL, "Ok", (DialogInterface.OnClickListener) null);
       dialog.setTitle("ShipsDroid");
    }*/
+
 
    public static Inet4Address getLocalIpAddress()
    {
@@ -111,4 +155,5 @@ public class Utils
          });
       }
    }
+
 }

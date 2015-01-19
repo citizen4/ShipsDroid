@@ -28,7 +28,6 @@ public class Playing extends GameStateAdapter
       abortGameMsg.TYPE = Message.GAME;
       abortGameMsg.SUB_TYPE = Message.PAUSE;
       mGameEngine.getNetService().sendMessage(abortGameMsg);
-      //mGameEngine.getShotClock().pause();
    }
 
    @Override
@@ -45,9 +44,6 @@ public class Playing extends GameStateAdapter
       abortGameMsg.TYPE = Message.GAME;
       abortGameMsg.SUB_TYPE = Message.ABORT;
       mGameEngine.getNetService().sendMessage(abortGameMsg);
-      mGameEngine.setPlayerEnabled(true, false);
-      mGameEngine.getShotClock().stop();
-      mGameEngine.setState(new PeerReady(mGameEngine));
    }
 
    @Override
@@ -57,10 +53,10 @@ public class Playing extends GameStateAdapter
       abortGameMsg.TYPE = Message.GAME;
       abortGameMsg.SUB_TYPE = Message.GAME_OVER;
       mGameEngine.getNetService().sendMessage(abortGameMsg);
+
       mGameEngine.setPlayerEnabled(true, false);
       mGameEngine.getShotClock().stop();
       mGameEngine.setState(new PeerReady(mGameEngine));
-      //mGameEngine.setState(new Finished(mGameEngine));
    }
 
 }
