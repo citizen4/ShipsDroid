@@ -25,12 +25,14 @@ public class NetController
    private Thread mReachableThread;
    private Listener mListener;
    private volatile boolean mIsReachable;
+   private volatile boolean mIsReachableThreadPaused;
    private InetAddress mPeerIp;
    private volatile int mPort;
 
    public NetController(final Listener listener)
    {
       mListener = listener;
+      mIsReachableThreadPaused = true;
       setupSockets();
    }
 
@@ -42,6 +44,11 @@ public class NetController
    public int getPort()
    {
       return mPort;
+   }
+
+   public void pauseReachableThread(final boolean pauseFlag)
+   {
+      mIsReachableThreadPaused = pauseFlag;
    }
 
    public void startReceiverThread()
@@ -62,8 +69,8 @@ public class NetController
                   try {
                      // blocking call
                      mP2pSocket.receive(packet);
-                     mIsReachable = true;
-                     id = packet.getAddress().getHostAddress() + ":" + packet.getPort();
+                     mPeerIp = packet.getAddress();
+                     id = mPeerIp.getHostAddress() + ":" + packet.getPort();
                      msg = new String(packet.getData(), "UTF-8");
                      parsePacket(msg, id);
                   } catch (IOException e) {
@@ -172,7 +179,7 @@ public class NetController
    }
 
 
-   public void startReachableThread(final InetAddress peerAddress)
+   public void startReachableThread()
    {
       if (mReachableThread == null || !mReachableThread.isAlive()) {
 
@@ -181,41 +188,54 @@ public class NetController
             @Override
             public void run()
             {
+               Log.d(LOG_TAG, "Starting P2P-Reachable Thread");
                byte[] echoData = "ShipsDroid".getBytes();
 
                if (mEchoSocket == null) {
                   try {
                      mEchoSocket = new DatagramSocket(ECHO_PORT);
                      mEchoSocket.setReuseAddress(true);
-                     mEchoSocket.setSoTimeout(1345);
+                     mEchoSocket.setSoTimeout(499);
                   } catch (SocketException e) {
                      Log.e(LOG_TAG, "Echo socket create:", e);
                   }
                }
 
                while (!mReachableThread.isInterrupted()) {
-                  if (peerAddress != null) {
-                     boolean isReachable = false;
-                     try {
-                        if (mIsReachable) {
-                           Thread.sleep(999);
-                        }
-                        //isReachable = peerAddress.isReachable(2123);
-                        mEchoSocket.send(new DatagramPacket(echoData, echoData.length, peerAddress, ECHO_PORT));
-                        mEchoSocket.receive(new DatagramPacket(new byte[echoData.length], echoData.length));
-                        Log.d(LOG_TAG, "Reachable Loop:" + mIsReachable);
-                        isReachable = true;
-                     } catch (Exception e) {
-                        isReachable = (e instanceof PortUnreachableException);
-                     } finally {
-                        if (mIsReachable != isReachable) {
-                           mIsReachable = isReachable;
+                  boolean isReachable = false;
+                  try {
+
+                     if (mPeerIp == null || mIsReachableThreadPaused) {
+                        Thread.sleep(200);
+                        continue;
+                     }
+
+                     if (mIsReachable) {
+                        Thread.sleep(888);
+                     }
+
+                     //isReachable = peerAddress.isReachable(2123);
+                     mEchoSocket.send(new DatagramPacket(echoData, echoData.length, mPeerIp, ECHO_PORT));
+                     mEchoSocket.receive(new DatagramPacket(new byte[echoData.length], echoData.length));
+                     isReachable = true;
+                  } catch (Exception e) {
+                     if (e instanceof InterruptedException) {
+                        Thread.currentThread().interrupt();
+                        continue;
+                     }
+                     isReachable = (e instanceof PortUnreachableException);
+                  } finally {
+                     //Log.d(LOG_TAG, "Reachable Loop: " + isReachable+"/"+mIsReachable);
+                     if (mIsReachable != isReachable) {
+                        mIsReachable = isReachable;
+                        if (mListener != null) {
                            mListener.onReachabilityChanged(isReachable, null);
                         }
                      }
                   }
                }
 
+               Log.d(LOG_TAG, "Out of ReachableThread");
                mEchoSocket.close();
                mEchoSocket = null;
             }
@@ -230,6 +250,7 @@ public class NetController
       Log.i(LOG_TAG, "Stopping P2P-Reachable Thread");
       if (mReachableThread != null && mReachableThread.isAlive()) {
          mReachableThread.interrupt();
+         //mReachableThread = null;
       }
    }
 

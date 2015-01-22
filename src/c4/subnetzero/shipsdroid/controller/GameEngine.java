@@ -35,11 +35,11 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
    private StateListener stateListener = null;
    private ScoreListener scoreListener = null;
    private volatile boolean myTurnFlag = false;
-   private boolean mPeerConnected = false;
+   //private boolean mPeerConnected = false;
    private boolean mIsHidden = false;
    private IGameState currentState = new PeerReady(this);
    private Context mContext;
-   private Message mLastMessage;
+   //private Message mLastMessage;
 
    public GameEngine(final Context context, final NetService netService)
    {
@@ -86,9 +86,6 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
    public void setHidden(final boolean isHidden)
    {
       mIsHidden = isHidden;
-      if (isHidden) {
-
-      }
    }
 
    public NetService getNetService()
@@ -345,22 +342,14 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
    @Override
    public void onReachabilityChanged(final boolean reachable)
    {
-      Utils.showToast(mContext, "Reachability changed: " + reachable);
-      android.os.Message msg = android.os.Message.obtain();
-      msg.what = GameActivity.UPDATE_CONNECTION_STATE;
-      msg.arg1 = reachable ? 0xff00ff00 : 0xffff0000;
-      mUiHandler.sendMessage(msg);
+      mUiHandler.sendEmptyMessage(GameActivity.UPDATE_CONNECTION_STATE);
    }
 
    @Override
    public void onPeerReady()
    {
-      mPeerConnected = true;
-      Utils.showToast(mContext, "Handshake complete!");
-      android.os.Message msg = android.os.Message.obtain();
-      msg.what = GameActivity.UPDATE_CONNECTION_STATE;
-      msg.arg1 = 0xff00ff00;
-      mUiHandler.sendMessage(msg);
+      //mPeerConnected = true;
+      //updateConnectionState();
    }
 
    @Override
@@ -368,26 +357,22 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
    {
    }
 
+   /*
    @Override
    public void onReadyToConnect()
    {
-   }
+   }*/
 
    @Override
    public void onConnected(InetAddress serverIp, int serverPort, boolean isGroupOwner)
    {
-      Utils.showToast(mContext, "Connected");
+      mUiHandler.sendEmptyMessage(GameActivity.UPDATE_CONNECTION_STATE);
    }
 
    @Override
    public void onDisconnected()
    {
-      mPeerConnected = false;
-      Utils.showToast(mContext, "Disconnected");
-      android.os.Message msg = android.os.Message.obtain();
-      msg.what = GameActivity.UPDATE_CONNECTION_STATE;
-      msg.arg1 = 0xffff0000;
-      mUiHandler.sendMessage(msg);
+      mUiHandler.sendEmptyMessage(GameActivity.UPDATE_CONNECTION_STATE);
    }
 
 
@@ -409,6 +394,13 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
       mUiHandler.sendMessage(msg);
    }
 
+   /*
+   private void updateConnectionState(int delay)
+   {
+      android.os.Message msg = android.os.Message.obtain();
+      msg.what = GameActivity.UPDATE_CONNECTION_STATE;
+      mUiHandler.sendEmptyMessageDelayed()
+   }*/
 
    public void setPlayerEnabled(final boolean enable, final boolean newGame)
    {
@@ -420,11 +412,15 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
       ((EnemyFleetView) enemyFleetModelUpdateListener).setEnabled(enable, newGame);
    }
 
+   /*
+    * ***************************************
+    * Implementation of ShotClock Callbacks *
+    * ***************************************
+    */
 
    @Override
    public void onTimeIsUp()
    {
-      Log.d(LOG_TAG, "onTimeIsUp()");
       setPlayerEnabled(false, false);
       Message timeoutMsg = new Message();
       timeoutMsg.TYPE = Message.GAME;
@@ -435,12 +431,12 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
    @Override
    public void onTick(final int tick)
    {
-      //Log.d(LOG_TAG,"Tick: "+tick);
       android.os.Message msg = android.os.Message.obtain();
       msg.what = GameActivity.UPDATE_SHOT_CLOCK;
       msg.arg1 = tick;
       mUiHandler.sendMessage(msg);
    }
+
 
    public interface StateListener
    {

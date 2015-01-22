@@ -4,14 +4,16 @@
               android:layout_height="match_parent"
               android:padding="4dp">
 
-    <Button android:id="@+id/con_state"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:background="#0f0"
-            android:layout_alignParentLeft="true"
-            android:layout_centerVertical="true"
-            android:layout_marginRight="8dp"
+    <ImageButton android:id="@+id/con_state"
+                 android:layout_height="wrap_content"
+                 android:layout_width="wrap_content"
+                 android:background="@drawable/state_yellow_bg"
+                 android:src="@drawable/wifi32"
+                 android:layout_alignParentLeft="true"
+                 android:layout_centerVertical="true"
+                 android:layout_marginRight="8dp"
             />
+
 
     <LinearLayout android:layout_width="wrap_content"
                   android:layout_height="wrap_content"

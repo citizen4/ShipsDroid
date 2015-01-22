@@ -8,6 +8,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -21,6 +22,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import c4.subnetzero.shipsdroid.controller.GameEngine;
 import c4.subnetzero.shipsdroid.view.EnemyFleetView;
@@ -43,7 +45,7 @@ public class GameActivity extends Activity implements Handler.Callback, ServiceC
    private TextView mShotClockView;
    private TextView mEnemyShipsView;
    private TextView mMyShipsView;
-   private Button mConState;
+   private ImageButton mConState;
    //private ActionBar mActionBar;
 
    public static final int UPDATE_SHOT_CLOCK = 1;
@@ -148,6 +150,7 @@ public class GameActivity extends Activity implements Handler.Callback, ServiceC
 
       if (mEnemyFleetView == null) {
          buildGameBoard();
+         mUiHandler.sendEmptyMessageDelayed(UPDATE_CONNECTION_STATE, 2000);
       }
    }
 
@@ -221,7 +224,23 @@ public class GameActivity extends Activity implements Handler.Callback, ServiceC
             }
             break;
          case UPDATE_CONNECTION_STATE:
-            mConState.setBackgroundColor(msg.arg1);
+            Drawable stateDrawable;
+            switch (mNetService.getState()) {
+               case CONNECTED:
+               case UNREACHABLE:
+                  stateDrawable = getResources().getDrawable(R.drawable.state_yellow_bg);
+                  break;
+               case DISCONNECTED:
+                  stateDrawable = getResources().getDrawable(R.drawable.state_red_bg);
+                  break;
+               case REACHABLE:
+                  stateDrawable = getResources().getDrawable(R.drawable.state_green_bg);
+                  break;
+               default:
+                  stateDrawable = getResources().getDrawable(R.drawable.state_gray_bg);
+                  break;
+            }
+            mConState.setBackground(stateDrawable);
             break;
          case PEER_QUIT_APP:
             finish();
@@ -270,7 +289,7 @@ public class GameActivity extends Activity implements Handler.Callback, ServiceC
          LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
          @SuppressLint("InflateParams") View scoreBoardView = inflater.inflate(R.layout.score, null);
 
-         mConState = (Button) scoreBoardView.findViewById(R.id.con_state);
+         mConState = (ImageButton) scoreBoardView.findViewById(R.id.con_state);
          mEnemyShipsView = (TextView) scoreBoardView.findViewById(R.id.enemy_ships);
          mMyShipsView = (TextView) scoreBoardView.findViewById(R.id.my_ships);
 

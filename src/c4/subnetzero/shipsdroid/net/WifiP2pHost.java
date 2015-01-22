@@ -17,6 +17,7 @@ import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceRequest;
 import android.os.*;
 import android.os.Message;
 import android.util.Log;
+import c4.subnetzero.shipsdroid.Utils;
 
 import java.net.InetAddress;
 
@@ -45,6 +46,7 @@ public class WifiP2pHost implements Handler.Callback
    private boolean mIsServiceRequestRegistered;
    private boolean mIsConnecting;
    private boolean mIsConnected;
+   private NetworkInfo.DetailedState mLastState = NetworkInfo.DetailedState.FAILED;
    private int mServerPort;
 
 
@@ -71,8 +73,6 @@ public class WifiP2pHost implements Handler.Callback
       } else {
          Log.e(LOG_TAG, "No Service Id!");
       }
-
-      mHandler.sendEmptyMessageDelayed(RESTART_DISCOVERY, 66666);
    }
 
 
@@ -91,11 +91,6 @@ public class WifiP2pHost implements Handler.Callback
       mHandler.sendEmptyMessageDelayed(QUIT, 666);
    }
 
-   /*
-   public void quit()
-   {
-      mHandlerThread.quit();
-   }*/
 
    public void connect()
    {
@@ -104,9 +99,22 @@ public class WifiP2pHost implements Handler.Callback
 
    public void disconnect()
    {
+      mWifiManager.requestGroupInfo(mChannel, new WifiP2pManager.GroupInfoListener()
+      {
+         @Override
+         public void onGroupInfoAvailable(WifiP2pGroup group)
+         {
+            if (group != null /*&& group.isGroupOwner()*/) {
+               mWifiManager.cancelConnect(mChannel, new WifiP2pActionListener("cancelConnect"));
+               mWifiManager.removeGroup(mChannel, new WifiP2pActionListener("removeGroup"));
+            }
+         }
+      });
+
+      /*
       if (mLocalDevice != null && mLocalDevice.status == WifiP2pDevice.CONNECTED) {
          mWifiManager.removeGroup(mChannel, new WifiP2pActionListener("removeGroup"));
-      }
+      }*/
    }
 
 
@@ -116,7 +124,6 @@ public class WifiP2pHost implements Handler.Callback
          Log.d(LOG_TAG, "Register service " + serviceName + " type " + serviceType);
          WifiP2pDnsSdServiceInfo serviceInfo = WifiP2pDnsSdServiceInfo.newInstance(serviceName, serviceType, null);
          mWifiManager.addLocalService(mChannel, serviceInfo, new WifiP2pActionListener("addLocalService"));
-         startDiscovery();
          mIsLocalServiceRegistered = true;
       }
    }
@@ -236,6 +243,17 @@ public class WifiP2pHost implements Handler.Callback
                }
             });
          }
+
+
+         @Override
+         public void onFailure(int reason)
+         {
+            super.onFailure(reason);
+            if (reason == WifiP2pManager.BUSY) {
+               Utils.showToast(mContext, "BUSY Error");
+            }
+         }
+
       });
    }
 
@@ -262,6 +280,7 @@ public class WifiP2pHost implements Handler.Callback
    {
       switch (msg.what) {
          case RESTART_DISCOVERY:
+            mHandler.removeMessages(RESTART_DISCOVERY);
             resetDiscovery();
             mHandler.sendEmptyMessageDelayed(RESTART_DISCOVERY, 66666);
             break;
@@ -348,22 +367,37 @@ public class WifiP2pHost implements Handler.Callback
       private void onConnectionChanged(Intent intent)
       {
          NetworkInfo netInfo = intent.getParcelableExtra(WifiP2pManager.EXTRA_NETWORK_INFO);
+         //NetworkInfo.State currentState = netInfo.getState();
+         NetworkInfo.DetailedState currentState = netInfo.getDetailedState();
 
-         Log.i(LOG_TAG, "Wifi P2P connection changed " + netInfo);
+         Log.d(LOG_TAG, "Connection state: " + netInfo.getDetailedState());
+         Log.i(LOG_TAG, netInfo.toString());
+
          mIsConnected = netInfo.isConnected();
 
-         Log.i(LOG_TAG, "Wifi P2P connection is connected ? " + mIsConnected);
+         if (currentState == NetworkInfo.DetailedState.IDLE) {
+            mHandler.sendEmptyMessage(RESTART_DISCOVERY);
+            mLastState = currentState;
+            return;
+         }
 
-         if (netInfo.getState() == NetworkInfo.State.CONNECTED) {
+         if (currentState == NetworkInfo.DetailedState.CONNECTED) {
 
             mHandler.removeMessages(RESTART_DISCOVERY);
+
+            if (mLastState == NetworkInfo.DetailedState.FAILED) {
+               disconnect();
+               mLastState = currentState;
+               return;
+            }
+
+            mLastState = currentState;
 
             mWifiManager.requestConnectionInfo(mChannel, new WifiP2pManager.ConnectionInfoListener()
             {
                @Override
                public void onConnectionInfoAvailable(final WifiP2pInfo info)
                {
-                  Log.i(LOG_TAG, "Wifi P2P connection is formed ? " + info.groupFormed);
                   mWifiManager.requestGroupInfo(mChannel, new WifiP2pManager.GroupInfoListener()
                   {
                      @Override
@@ -371,8 +405,7 @@ public class WifiP2pHost implements Handler.Callback
                      {
                         if (group != null) {
                            //WifiP2pHost.this.mGroup = group;
-                           Log.i(LOG_TAG, "Wifi P2P connection group is  " + group.getNetworkName());
-                           Log.i(LOG_TAG, "Group size " + group.getClientList().size());
+                           Log.i(LOG_TAG, "Wifi P2P group is  " + group.getNetworkName());
                            if (mListener != null) {
                               mListener.onConnected(info.groupOwnerAddress, mServerPort, group.isGroupOwner());
                            }
@@ -384,12 +417,13 @@ public class WifiP2pHost implements Handler.Callback
 
          } else {
             //mGroup = null;
-            Log.d(LOG_TAG, "Connection state: " + netInfo.getDetailedState());
-            if (mListener != null && netInfo.getState() == NetworkInfo.State.DISCONNECTED) {
-               mListener.onDisconnected();
-               resetDiscovery();
+            if (currentState == NetworkInfo.DetailedState.DISCONNECTED) {
+               mHandler.sendEmptyMessage(RESTART_DISCOVERY);
+               if (mListener != null) {
+                  mListener.onDisconnected();
+               }
+               mLastState = currentState;
             }
-            //resetDiscovery();
          }
       }
 

@@ -13,18 +13,26 @@ import c4.subnetzero.shipsdroid.net.NetController;
 import c4.subnetzero.shipsdroid.net.WifiP2pHost;
 
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 
 public class NetService extends Service implements NetController.Listener, WifiP2pHost.Listener
 {
    private static final String LOG_TAG = "NetService";
    private LocalBinder mLocalBinder = new LocalBinder();
-   private boolean mRestartAtDisconnect = false;
-   private volatile boolean mConnected = false;
+   private volatile State mState = State.DISCONNECTED;
    private NetController mNetController;
    private WifiP2pHost mWifiP2pHost;
    private Listener mListener;
    private String mPeerId = "0.0.0.0:0";
+
+   public enum State
+   {
+      DISCONNECTED,
+      CONNECTED,
+      REACHABLE,
+      UNREACHABLE
+   }
 
    @Override
    public void onCreate()
@@ -56,13 +64,21 @@ public class NetService extends Service implements NetController.Listener, WifiP
    {
       mWifiP2pHost.start();
       mNetController.startReceiverThread();
+      mNetController.startReachableThread();
    }
 
    public void stop()
    {
       mListener = null;
+      mNetController.pauseReachableThread(true);
+      mNetController.stopReachableThread();
       mNetController.stopReceiverThread();
       mWifiP2pHost.stop();
+   }
+
+   public State getState()
+   {
+      return mState;
    }
 
    public void setListener(Listener listener)
@@ -76,20 +92,20 @@ public class NetService extends Service implements NetController.Listener, WifiP
 
    public void sendServerHello(final String groupOwnerId)
    {
-      Log.d(LOG_TAG, "sendServerHell() -> " + groupOwnerId);
+      Log.d(LOG_TAG, "sendServerHello() -> " + groupOwnerId);
       sendMessage("ServerHello", groupOwnerId);
    }
 
    public void sendMessage(final String message, final String peerId)
    {
-      if (mConnected) {
+      if (mState == State.CONNECTED) {
          mNetController.sendMessage(message, (peerId != null) ? peerId : mPeerId);
       }
    }
 
    public void sendMessage(final Message message)
    {
-      if (mConnected) {
+      if (mState == State.REACHABLE) {
          mNetController.sendMessage(message, mPeerId);
       }
    }
@@ -122,33 +138,32 @@ public class NetService extends Service implements NetController.Listener, WifiP
    public void onMessage(String newMsg, String peerId)
    {
       if (newMsg.equals("ServerHello")) {
-         mRestartAtDisconnect = true;
+         //mState = State.REACHABLE;
+         mNetController.pauseReachableThread(false);
          mPeerId = peerId;
          mNetController.sendMessage("ClientHello", mPeerId);
-         //try {
-         //   mNetController.startReachableThread(InetAddress.getByName(peerId.split(":")[0]));
-         //} catch (UnknownHostException e) {}
          if (mListener != null) {
             mListener.onPeerReady();
          }
       }
 
       if (newMsg.equals("ClientHello")) {
-         mRestartAtDisconnect = true;
+         //mState = State.REACHABLE;
+         mNetController.pauseReachableThread(false);
          mPeerId = peerId;
-         //try {
-         //   mNetController.startReachableThread(InetAddress.getByName(peerId.split(":")[0]));
-         //} catch (UnknownHostException e) {}
          if (mListener != null) {
             mListener.onPeerReady();
          }
       }
+
+
    }
 
    @Override
    public void onReachabilityChanged(final boolean reachable, final String peerId)
    {
-      Log.d(LOG_TAG, "Reachablility has changed to: " + reachable);
+      Log.d(LOG_TAG, "Reachability has changed to: " + reachable);
+      mState = reachable ? State.REACHABLE : State.UNREACHABLE;
       if (mListener != null) {
          mListener.onReachabilityChanged(reachable);
       }
@@ -176,17 +191,14 @@ public class NetService extends Service implements NetController.Listener, WifiP
    @Override
    public void onReadyToConnect()
    {
-      if (mListener != null) {
-         mListener.onReadyToConnect();
-      }
-
       connect();
    }
 
    @Override
    public void onConnected(final InetAddress groupOwnerIp, final int groupOwnerPort, final boolean isGroupOwner)
    {
-      mConnected = true;
+      mState = State.CONNECTED;
+      //mNetController.pauseReachableThread(false);
 
       if (mListener != null) {
          mListener.onConnected(groupOwnerIp, groupOwnerPort, isGroupOwner);
@@ -200,29 +212,8 @@ public class NetService extends Service implements NetController.Listener, WifiP
    @Override
    public void onDisconnected()
    {
-      mConnected = false;
-
-      if (mRestartAtDisconnect) {
-         mRestartAtDisconnect = false;
-         mWifiP2pHost.stop();
-         mWifiP2pHost = null;
-         new Thread(new Runnable()
-         {
-            @Override
-            public void run()
-            {
-               try {
-                  Thread.sleep(3333);
-               } catch (InterruptedException e) {
-                  e.printStackTrace();
-               }
-               Log.d(LOG_TAG, "********************* RESTART");
-               mWifiP2pHost = new WifiP2pHost(NetService.this, NetService.this);
-               mWifiP2pHost.setServiceId("ShipsDroid:" + mNetController.getPort());
-               mWifiP2pHost.start();
-            }
-         }).start();
-      }
+      mState = State.DISCONNECTED;
+      mNetController.pauseReachableThread(true);
 
       if (mListener != null) {
          mListener.onDisconnected();
@@ -247,8 +238,6 @@ public class NetService extends Service implements NetController.Listener, WifiP
       void onReachabilityChanged(final boolean reachable);
 
       void onStartDiscovery();
-
-      void onReadyToConnect();
 
       void onConnected(InetAddress serverIp, int serverPort, boolean isGroupOwner);
 

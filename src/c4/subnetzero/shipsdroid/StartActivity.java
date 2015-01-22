@@ -296,11 +296,11 @@ public class StartActivity extends Activity implements Handler.Callback, Service
             mUiHandler.sendEmptyMessage(L2_DISCOVERY_STARTED);
          }
 
+         /*
          @Override
          public void onReadyToConnect()
          {
-            //mUiHandler.sendEmptyMessage(READY_TO_CONNECT);
-         }
+         }*/
 
          @Override
          public void onConnected(final InetAddress groupOwnerIp, final int groupOwnerPort, final boolean isGroupOwner)
@@ -325,24 +325,6 @@ public class StartActivity extends Activity implements Handler.Callback, Service
             mUiHandler.sendEmptyMessage(L2_DISCONNECTED);
          }
       };
-
-      /*
-      new Thread(new Runnable()
-      {
-         @Override
-         public void run()
-         {
-            while (!(mIsServiceConnected && mIsWifiP2pEnabled)) {
-               try {
-                  Thread.sleep(1000);
-               } catch (InterruptedException e) {
-               }
-            }
-
-            mUiHandler.sendEmptyMessageDelayed(WIFI_P2P_START, 1000);
-         }
-      }).start();*/
-
    }
 
    private class WifiP2pReceiver extends BroadcastReceiver
