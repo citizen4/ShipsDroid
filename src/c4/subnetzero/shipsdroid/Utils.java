@@ -40,7 +40,7 @@ public class Utils
             @Override
             public void run()
             {
-               Toast.makeText(context, toastMsg, Toast.LENGTH_LONG).show();
+               Toast.makeText(context, toastMsg, Toast.LENGTH_SHORT).show();
             }
          });
       }
@@ -143,6 +143,7 @@ public class Utils
       try {
          Intent intent = new Intent(Settings.ACTION_WIFI_SETTINGS);
          activity.startActivity(intent);
+         //activity.startActivityForResult(intent,0);
       } catch (ActivityNotFoundException e) {
          Log.e(LOG_TAG, "Unable to launch wifi settings activity", e);
          activity.runOnUiThread(new Runnable()
@@ -150,7 +151,7 @@ public class Utils
             @Override
             public void run()
             {
-               Toast.makeText(activity,"Please enable Wifi Direct", Toast.LENGTH_SHORT).show();
+               Toast.makeText(activity, "Please enable Wifi", Toast.LENGTH_SHORT).show();
             }
          });
       }

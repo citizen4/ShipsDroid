@@ -1,6 +1,7 @@
 package c4.subnetzero.shipsdroid;
 
 
+import android.annotation.SuppressLint;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.content.ComponentName;
@@ -19,6 +20,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 import c4.subnetzero.shipsdroid.controller.GameEngine;
 import c4.subnetzero.shipsdroid.view.EnemyFleetView;
@@ -30,10 +32,8 @@ public class GameActivity extends Activity implements Handler.Callback, ServiceC
 
    private static final String LOG_TAG = "GameActivity";
 
-   private boolean mRestarted;
+   //private boolean mRestarted;
    private Handler mUiHandler;
-   private View mEnemyBoard;
-   private View mOwnBoard;
    private Menu mMenu;
    private EnemyFleetView mEnemyFleetView;
    private OwnFleetView mOwnFleetView;
@@ -43,12 +43,14 @@ public class GameActivity extends Activity implements Handler.Callback, ServiceC
    private TextView mShotClockView;
    private TextView mEnemyShipsView;
    private TextView mMyShipsView;
+   private Button mConState;
    //private ActionBar mActionBar;
 
    public static final int UPDATE_SHOT_CLOCK = 1;
    public static final int UPDATE_SCORE_BOARD = 2;
    public static final int UPDATE_GAME_MENU = 3;
-   public static final int PEER_QUIT_APP = 4;
+   public static final int UPDATE_CONNECTION_STATE = 4;
+   public static final int PEER_QUIT_APP = 5;
 
    @Override
    public void onCreate(Bundle savedInstanceState)
@@ -58,7 +60,7 @@ public class GameActivity extends Activity implements Handler.Callback, ServiceC
       setContentView(R.layout.game);
 
       mUiHandler = new Handler(this);
-      mRestarted = false;
+      //mRestarted = false;
       setup();
    }
 
@@ -67,7 +69,7 @@ public class GameActivity extends Activity implements Handler.Callback, ServiceC
    {
       Log.d(LOG_TAG, "onRestart()");
       super.onRestart();
-      mRestarted = true;
+      //mRestarted = true;
    }
 
    @Override
@@ -218,6 +220,9 @@ public class GameActivity extends Activity implements Handler.Callback, ServiceC
                   break;
             }
             break;
+         case UPDATE_CONNECTION_STATE:
+            mConState.setBackgroundColor(msg.arg1);
+            break;
          case PEER_QUIT_APP:
             finish();
          default:
@@ -263,14 +268,15 @@ public class GameActivity extends Activity implements Handler.Callback, ServiceC
       if (mActionBar != null) {
          //LayoutInflater inflater = LayoutInflater.from(this);
          LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-         View scoreBoardView = (View) inflater.inflate(R.layout.score, null);
+         @SuppressLint("InflateParams") View scoreBoardView = inflater.inflate(R.layout.score, null);
 
+         mConState = (Button) scoreBoardView.findViewById(R.id.con_state);
          mEnemyShipsView = (TextView) scoreBoardView.findViewById(R.id.enemy_ships);
          mMyShipsView = (TextView) scoreBoardView.findViewById(R.id.my_ships);
 
-         mActionBar.setDisplayShowHomeEnabled(true);
+         mActionBar.setDisplayShowHomeEnabled(false);
          mActionBar.setDisplayHomeAsUpEnabled(false);
-         mActionBar.setDisplayUseLogoEnabled(true);
+         mActionBar.setDisplayUseLogoEnabled(false);
          mActionBar.setDisplayShowTitleEnabled(false);
          mActionBar.setDisplayShowCustomEnabled(true);
 
@@ -298,11 +304,11 @@ public class GameActivity extends Activity implements Handler.Callback, ServiceC
 
       LayoutInflater inflater = LayoutInflater.from(this);
 
-      mEnemyBoard = inflater.inflate(R.layout.board, enemyFrame, false);
+      View mEnemyBoard = inflater.inflate(R.layout.board, enemyFrame, false);
       mEnemyFleetView = new EnemyFleetView(this, (ViewGroup) mEnemyBoard, mGridButtonHandler, minEnemyFrameSize - 12);
       enemyFrame.addView(mEnemyBoard);
 
-      mOwnBoard = inflater.inflate(R.layout.board, enemyFrame, false);
+      View mOwnBoard = inflater.inflate(R.layout.board, enemyFrame, false);
       mOwnFleetView = new OwnFleetView(this, (ViewGroup) mOwnBoard, minOwnFrameSize - (int) (30 * metrics.density));
       ownFrame.addView(mOwnBoard);
 

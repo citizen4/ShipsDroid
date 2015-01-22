@@ -14,25 +14,31 @@ import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceInfo;
 import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceRequest;
-import android.os.HandlerThread;
+import android.os.*;
+import android.os.Message;
 import android.util.Log;
 
 import java.net.InetAddress;
 
-public class WifiP2pHost
+public class WifiP2pHost implements Handler.Callback
 {
    private static final String LOG_TAG = "WifiP2pHost";
+
+   private static final int RESTART_DISCOVERY = 0;
+   private static final int QUIT = 1;
+
    private Context mContext;
    private HandlerThread mHandlerThread;
+   private Handler mHandler;
    private Listener mListener;
    private WifiP2pManager mWifiManager;
    private WifiP2pManager.Channel mChannel;
    private IntentFilter mWifiP2pFilter;
    private WifiP2pReceiver mWifiP2pReceiver;
-   private LocalServiceReceiver mLocalServiceReceiver;
+   //private LocalServiceReceiver mLocalServiceReceiver;
    private WifiP2pDevice mRemoteDevice;
    private WifiP2pDevice mLocalDevice;
-   private WifiP2pGroup mGroup;
+   //private WifiP2pGroup mGroup;
    private String mServiceId;
    private boolean mIsEnabled;
    private boolean mIsLocalServiceRegistered;
@@ -50,6 +56,11 @@ public class WifiP2pHost
       setup();
    }
 
+   public void setServiceId(final String serviceId)
+   {
+      mServiceId = serviceId;
+   }
+
    public void start()
    {
       mContext.registerReceiver(mWifiP2pReceiver, mWifiP2pFilter);
@@ -60,11 +71,15 @@ public class WifiP2pHost
       } else {
          Log.e(LOG_TAG, "No Service Id!");
       }
+
+      mHandler.sendEmptyMessageDelayed(RESTART_DISCOVERY, 66666);
    }
 
 
    public void stop()
    {
+      mListener = null;
+      mContext.unregisterReceiver(mWifiP2pReceiver);
       unregisterServices();
 
       if (!mIsConnected) {
@@ -72,13 +87,15 @@ public class WifiP2pHost
          stopDiscovery();
       }
 
-      mContext.unregisterReceiver(mWifiP2pReceiver);
+      mHandler.removeMessages(0);
+      mHandler.sendEmptyMessageDelayed(QUIT, 666);
    }
 
+   /*
    public void quit()
    {
       mHandlerThread.quit();
-   }
+   }*/
 
    public void connect()
    {
@@ -92,10 +109,6 @@ public class WifiP2pHost
       }
    }
 
-   public boolean isGroupOwner()
-   {
-      return (mGroup != null) && mGroup.isGroupOwner();
-   }
 
    private void registerService(String serviceName, String serviceType)
    {
@@ -141,7 +154,9 @@ public class WifiP2pHost
          public void onSuccess()
          {
             super.onSuccess();
-            mListener.onStartDiscovery();
+            if (mListener != null) {
+               mListener.onStartDiscovery();
+            }
          }
 
       });
@@ -229,6 +244,7 @@ public class WifiP2pHost
       mWifiManager = (WifiP2pManager) mContext.getSystemService(Context.WIFI_P2P_SERVICE);
       mHandlerThread = new HandlerThread(LOG_TAG);
       mHandlerThread.start();
+      mHandler = new Handler(mHandlerThread.getLooper(), this);
 
       mChannel = mWifiManager.initialize(mContext, mHandlerThread.getLooper(), null);
 
@@ -238,9 +254,24 @@ public class WifiP2pHost
       mWifiP2pFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
       mWifiP2pReceiver = new WifiP2pReceiver();
-      mLocalServiceReceiver = new LocalServiceReceiver();
+   }
 
-      mContext.registerReceiver(mLocalServiceReceiver, new IntentFilter(Constants.LOCAL_SERVER_CHANGE_ACTION));
+
+   @Override
+   public boolean handleMessage(Message msg)
+   {
+      switch (msg.what) {
+         case RESTART_DISCOVERY:
+            resetDiscovery();
+            mHandler.sendEmptyMessageDelayed(RESTART_DISCOVERY, 66666);
+            break;
+         case QUIT:
+            Log.d(LOG_TAG, "Shutting down WifiP2pHost-Thread");
+            mHandlerThread.quitSafely();
+            break;
+      }
+
+      return true;
    }
 
    private String devStateToStr(int status)
@@ -283,7 +314,11 @@ public class WifiP2pHost
          mServerPort = Integer.parseInt(instanceName.split(":")[1]);
          mRemoteDevice = srcDevice;
 
-         mListener.onReadyToConnect();
+         mHandler.removeMessages(0);
+
+         if (mListener != null) {
+            mListener.onReadyToConnect();
+         }
       }
    }
 
@@ -319,7 +354,9 @@ public class WifiP2pHost
 
          Log.i(LOG_TAG, "Wifi P2P connection is connected ? " + mIsConnected);
 
-         if (mIsConnected) {
+         if (netInfo.getState() == NetworkInfo.State.CONNECTED) {
+
+            mHandler.removeMessages(RESTART_DISCOVERY);
 
             mWifiManager.requestConnectionInfo(mChannel, new WifiP2pManager.ConnectionInfoListener()
             {
@@ -333,10 +370,12 @@ public class WifiP2pHost
                      public void onGroupInfoAvailable(WifiP2pGroup group)
                      {
                         if (group != null) {
-                           WifiP2pHost.this.mGroup = group;
+                           //WifiP2pHost.this.mGroup = group;
                            Log.i(LOG_TAG, "Wifi P2P connection group is  " + group.getNetworkName());
                            Log.i(LOG_TAG, "Group size " + group.getClientList().size());
-                           mListener.onConnected(info.groupOwnerAddress, mServerPort);
+                           if (mListener != null) {
+                              mListener.onConnected(info.groupOwnerAddress, mServerPort, group.isGroupOwner());
+                           }
                         }
                      }
                   });
@@ -344,9 +383,13 @@ public class WifiP2pHost
             });
 
          } else {
-            mGroup = null;
-            mListener.onDisconnected();
-            resetDiscovery();
+            //mGroup = null;
+            Log.d(LOG_TAG, "Connection state: " + netInfo.getDetailedState());
+            if (mListener != null && netInfo.getState() == NetworkInfo.State.DISCONNECTED) {
+               mListener.onDisconnected();
+               resetDiscovery();
+            }
+            //resetDiscovery();
          }
       }
 
@@ -377,22 +420,6 @@ public class WifiP2pHost
 
    }
 
-   private class LocalServiceReceiver extends BroadcastReceiver
-   {
-      private static final String LOG_TAG = "LocalServiceReceiver";
-
-      @Override
-      public void onReceive(Context context, Intent intent)
-      {
-         int serverPort = intent.getIntExtra(Constants.EXTRA_LOCAL_SERVER_PORT, -1);
-         String serverName = intent.getStringExtra(Constants.EXTRA_LOCAL_SERVER_NAME);
-         Log.i(LOG_TAG, "Registered service name is " + serverName);
-
-         mServiceId = serverName + ":" + serverPort;
-         //Single shot receiver, so get lost
-         mContext.unregisterReceiver(mLocalServiceReceiver);
-      }
-   }
 
    private class WifiP2pActionListener implements WifiP2pManager.ActionListener
    {
@@ -442,7 +469,7 @@ public class WifiP2pHost
 
       void onReadyToConnect();
 
-      void onConnected(InetAddress serverIp, int serverPort);
+      void onConnected(InetAddress serverIp, int serverPort, boolean isGroupOwner);
 
       void onDisconnected();
    }

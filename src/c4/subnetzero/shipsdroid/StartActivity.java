@@ -44,11 +44,12 @@ public class StartActivity extends Activity implements Handler.Callback, Service
 
    private Handler mUiHandler;
    private NetService mNetService;
-   private WifiP2pHost mWifiP2pHost;
+   //private WifiP2pHost mWifiP2pHost;
    private WifiP2pReceiver mWifiP2pReceiver;
    private NetService.Listener mNetServiceListener;
    private volatile boolean mIsServiceConnected;
    private volatile boolean mIsWifiP2pEnabled;
+   private boolean mIsGroupOwner;
    private boolean mIsConnected;
 
    private InetAddress mGoIp;
@@ -73,6 +74,10 @@ public class StartActivity extends Activity implements Handler.Callback, Service
       Log.d(LOG_TAG, "onResume()");
       super.onResume();
 
+      if (mNetService != null) {
+         mNetService.setListener(mNetServiceListener);
+      }
+
       registerReceiver(mWifiP2pReceiver, new IntentFilter(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION));
    }
 
@@ -83,8 +88,8 @@ public class StartActivity extends Activity implements Handler.Callback, Service
       Log.d(LOG_TAG, "onPause()");
       super.onPause();
 
-      if (mWifiP2pHost != null && mIsWifiP2pEnabled) {
-         mWifiP2pHost.stop();
+      if (mNetService != null) {
+         mNetService.setListener(null);
       }
 
       unregisterReceiver(mWifiP2pReceiver);
@@ -95,10 +100,6 @@ public class StartActivity extends Activity implements Handler.Callback, Service
    protected void onDestroy()
    {
       Log.d(LOG_TAG, "onDestroy()");
-
-      if (mWifiP2pHost != null && mIsWifiP2pEnabled) {
-         mWifiP2pHost.quit();
-      }
 
       if (mNetService != null) {
          unbindService(this);
@@ -142,13 +143,22 @@ public class StartActivity extends Activity implements Handler.Callback, Service
    }
 
 
+   @Override
+   protected void onActivityResult(int requestCode, int resultCode, Intent intent)
+   {
+      if (requestCode == 0) {
+         bindService(new Intent(this, NetService.class), this, BIND_AUTO_CREATE);
+      }
+   }
 
    @Override
    public boolean handleMessage(Message msg)
    {
       switch (msg.what) {
          case WIFI_P2P_START:
-            mWifiP2pHost.start();
+            if (!mIsServiceConnected) {
+               bindService(new Intent(this, NetService.class), this, BIND_AUTO_CREATE);
+            }
             break;
 
          case L2_DISCOVERY_STARTED:
@@ -170,11 +180,9 @@ public class StartActivity extends Activity implements Handler.Callback, Service
          case L2_CONNECTED:
             mConDisconBtn.setVisibility(View.VISIBLE);
             mConDisconBtn.setText(getString(R.string.disconnect_btn));
-            if (!mWifiP2pHost.isGroupOwner()) {
-               mStateLabel.setText(getString(R.string.wifi_connected));
+            mStateLabel.setText(getString(mIsGroupOwner ? R.string.wifi_connected_go : R.string.wifi_connected));
+            if (!mIsGroupOwner) {
                mNetService.sendServerHello(mGroupOwnerId);
-            } else {
-               mStateLabel.setText(getString(R.string.wifi_connected_go));
             }
             break;
 
@@ -185,10 +193,11 @@ public class StartActivity extends Activity implements Handler.Callback, Service
 
          case L3_CONNECTED:
             mStateLabel.setText(getString(R.string.connected_ready_msg));
+            mNetService.setListener(null);
             Intent intent = new Intent(this, GameActivity.class);
             intent.putExtra("peerId", mPeerId);
             startActivity(intent);
-            mUiHandler.sendEmptyMessageDelayed(FINISH_ACTIVITY,2000);
+            mUiHandler.sendEmptyMessageDelayed(FINISH_ACTIVITY, 2000);
             break;
 
          case WIFI_DISABLED:
@@ -209,19 +218,16 @@ public class StartActivity extends Activity implements Handler.Callback, Service
    {
       Log.d(LOG_TAG, "onServiceConnected()");
       mNetService = ((NetService.LocalBinder) service).getService();
-      mNetService.broadcastStatus();
       mNetService.setListener(mNetServiceListener);
       mNetService.start();
       mIsServiceConnected = true;
    }
 
+   // Only gets called when service has crashed!!
    @Override
    public void onServiceDisconnected(ComponentName name)
    {
       Log.d(LOG_TAG, "onServiceDisconnected()");
-      mIsServiceConnected = false;
-      //mNetService.stop();
-      //mNetService = null;
    }
 
 
@@ -236,7 +242,7 @@ public class StartActivity extends Activity implements Handler.Callback, Service
          return;
       }
 
-      bindService(new Intent(this, NetService.class), this, BIND_AUTO_CREATE);
+      //bindService(new Intent(this, NetService.class), this, BIND_AUTO_CREATE);
 
       mStateLabel = (TextView) findViewById(R.id.state_label);
       mConDisconBtn = (Button) findViewById(R.id.con_discon_btn);
@@ -248,60 +254,21 @@ public class StartActivity extends Activity implements Handler.Callback, Service
          {
             if (!mIsConnected) {
 
-               if (mWifiP2pHost != null) {
+               if (mNetService != null) {
                   mUiHandler.sendEmptyMessage(L2_CONNECTING);
-                  mWifiP2pHost.connect();
+                  mNetService.connect();
                }
 
             } else {
 
-               if (mWifiP2pHost != null) {
-                  mWifiP2pHost.disconnect();
+               if (mNetService != null) {
+                  mNetService.disconnect();
                }
             }
          }
       });
 
       mWifiP2pReceiver = new WifiP2pReceiver();
-
-      mWifiP2pHost = new WifiP2pHost(StartActivity.this, new WifiP2pHost.Listener()
-      {
-         @Override
-         public void onStartDiscovery()
-         {
-            mUiHandler.sendEmptyMessage(L2_DISCOVERY_STARTED);
-         }
-
-         @Override
-         public void onReadyToConnect()
-         {
-            mUiHandler.sendEmptyMessage(READY_TO_CONNECT);
-         }
-
-         @Override
-         public void onConnected(final InetAddress groupOwnerIp, final int groupOwnerPort)
-         {
-            mIsConnected = true;
-
-            Log.d(LOG_TAG, "Server address: " + groupOwnerIp.getHostAddress() + ":" + groupOwnerPort);
-            Log.i(LOG_TAG, "Im the " + (mWifiP2pHost.isGroupOwner() ? "server" : "client"));
-
-            mGoIp = groupOwnerIp;
-            mGoPort = groupOwnerPort;
-
-            mGroupOwnerId = mGoIp.getHostAddress() + ":" + mGoPort;
-
-            mUiHandler.sendEmptyMessage(L2_CONNECTED);
-         }
-
-         @Override
-         public void onDisconnected()
-         {
-            mIsConnected = false;
-            mUiHandler.sendEmptyMessage(L2_DISCONNECTED);
-         }
-      });
-
 
       mNetServiceListener = new NetService.Listener()
       {
@@ -316,14 +283,56 @@ public class StartActivity extends Activity implements Handler.Callback, Service
          {
             //Nothing here
          }
+
+         @Override
+         public void onReachabilityChanged(final boolean reachable)
+         {
+            //Utils.showOkMsg(StartActivity.this,"Reachability changed: "+reachable,null);
+         }
+
+         @Override
+         public void onStartDiscovery()
+         {
+            mUiHandler.sendEmptyMessage(L2_DISCOVERY_STARTED);
+         }
+
+         @Override
+         public void onReadyToConnect()
+         {
+            //mUiHandler.sendEmptyMessage(READY_TO_CONNECT);
+         }
+
+         @Override
+         public void onConnected(final InetAddress groupOwnerIp, final int groupOwnerPort, final boolean isGroupOwner)
+         {
+            mIsConnected = true;
+
+            Log.d(LOG_TAG, "Server address: " + groupOwnerIp.getHostAddress() + ":" + groupOwnerPort);
+            Log.i(LOG_TAG, "Im the " + (isGroupOwner ? "server" : "client"));
+
+            mGoIp = groupOwnerIp;
+            mGoPort = groupOwnerPort;
+            mIsGroupOwner = isGroupOwner;
+            mGroupOwnerId = mGoIp.getHostAddress() + ":" + mGoPort;
+
+            //mUiHandler.sendEmptyMessage(L2_CONNECTED);
+         }
+
+         @Override
+         public void onDisconnected()
+         {
+            mIsConnected = false;
+            mUiHandler.sendEmptyMessage(L2_DISCONNECTED);
+         }
       };
 
+      /*
       new Thread(new Runnable()
       {
          @Override
          public void run()
          {
-            while (!mIsServiceConnected || !mIsWifiP2pEnabled) {
+            while (!(mIsServiceConnected && mIsWifiP2pEnabled)) {
                try {
                   Thread.sleep(1000);
                } catch (InterruptedException e) {
@@ -332,7 +341,7 @@ public class StartActivity extends Activity implements Handler.Callback, Service
 
             mUiHandler.sendEmptyMessageDelayed(WIFI_P2P_START, 1000);
          }
-      }).start();
+      }).start();*/
 
    }
 
@@ -359,6 +368,7 @@ public class StartActivity extends Activity implements Handler.Callback, Service
          if (state == WifiP2pManager.WIFI_P2P_STATE_ENABLED) {
             Log.i(LOG_TAG, "Wifi P2P is enabled");
             mIsWifiP2pEnabled = true;
+            mUiHandler.sendEmptyMessageDelayed(WIFI_P2P_START, 1000);
          } else {
             Log.i(LOG_TAG, "Wifi P2P is disabled. State " + state);
             mIsWifiP2pEnabled = false;

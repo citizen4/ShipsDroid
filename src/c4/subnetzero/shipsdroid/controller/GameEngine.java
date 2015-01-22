@@ -18,6 +18,7 @@ import c4.subnetzero.shipsdroid.model.Ship;
 import c4.subnetzero.shipsdroid.net.Message;
 import c4.subnetzero.shipsdroid.view.EnemyFleetView;
 
+import java.net.InetAddress;
 import java.util.ArrayList;
 
 
@@ -34,7 +35,7 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
    private StateListener stateListener = null;
    private ScoreListener scoreListener = null;
    private volatile boolean myTurnFlag = false;
-   //private boolean gotAWinner = false;
+   private boolean mPeerConnected = false;
    private boolean mIsHidden = false;
    private IGameState currentState = new PeerReady(this);
    private Context mContext;
@@ -57,7 +58,8 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
       mShotClock.setListener(this);
    }
 
-   public void setModelUpdateListener(final AbstractFleetModel.ModelUpdateListener own, final AbstractFleetModel.ModelUpdateListener enemy)
+   public void setModelUpdateListener(final AbstractFleetModel.ModelUpdateListener own,
+                                      final AbstractFleetModel.ModelUpdateListener enemy)
    {
       ownFleetModelUpdateListener = own;
       enemyFleetModelUpdateListener = enemy;
@@ -341,14 +343,56 @@ public final class GameEngine implements NetService.Listener, ShotClock.Listener
    }
 
    @Override
+   public void onReachabilityChanged(final boolean reachable)
+   {
+      Utils.showToast(mContext, "Reachability changed: " + reachable);
+      android.os.Message msg = android.os.Message.obtain();
+      msg.what = GameActivity.UPDATE_CONNECTION_STATE;
+      msg.arg1 = reachable ? 0xff00ff00 : 0xffff0000;
+      mUiHandler.sendMessage(msg);
+   }
+
+   @Override
    public void onPeerReady()
    {
-
+      mPeerConnected = true;
+      Utils.showToast(mContext, "Handshake complete!");
+      android.os.Message msg = android.os.Message.obtain();
+      msg.what = GameActivity.UPDATE_CONNECTION_STATE;
+      msg.arg1 = 0xff00ff00;
+      mUiHandler.sendMessage(msg);
    }
+
+   @Override
+   public void onStartDiscovery()
+   {
+   }
+
+   @Override
+   public void onReadyToConnect()
+   {
+   }
+
+   @Override
+   public void onConnected(InetAddress serverIp, int serverPort, boolean isGroupOwner)
+   {
+      Utils.showToast(mContext, "Connected");
+   }
+
+   @Override
+   public void onDisconnected()
+   {
+      mPeerConnected = false;
+      Utils.showToast(mContext, "Disconnected");
+      android.os.Message msg = android.os.Message.obtain();
+      msg.what = GameActivity.UPDATE_CONNECTION_STATE;
+      msg.arg1 = 0xffff0000;
+      mUiHandler.sendMessage(msg);
+   }
+
 
    private void startNewGame()
    {
-      //gotAWinner = false;
       ownFleetModel = new OwnFleetModel(ownFleetModelUpdateListener);
       enemyFleetModel = new EnemyFleetModel(enemyFleetModelUpdateListener);
 
